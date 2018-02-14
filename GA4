@@ -1,0 +1,320 @@
+///BENCHPLAYER.CPP BELOW!!!
+
+#include "BenchPlayer.h"
+#include <iostream>
+using namespace std;
+node *makeNewNode(Player info)
+{
+    //Good idea to write a separate fxn rather than constantly repeat
+    //But we'll probably have to get more specific since each node has 3 attributes to it
+    node *temp = new node;//creates node in dynamic memory
+    temp->stats = info;
+    temp->prev = NULL;
+    temp->next = NULL;
+    return temp;
+}
+void BenchPlayer::insertAtHead(Player info)
+{
+    node *newNode = makeNewNode(info);
+    if(head == NULL)//If the list is empty, newNode is the head of the list and it's only node
+    {
+        head = newNode;
+        return;
+    }
+    else
+    {
+        //If there are previously existing nodes
+        head->prev = newNode;//The node behind head is now newNode, so we're setting that ptr to the address of newNode
+        newNode->next = head;//Set next ptr of newNode to current head's address
+        //I guess we don't say anything about newNode->prev b/c nothing's behind it yet?
+        head = newNode;
+    }
+}
+void BenchPlayer::insertAtTail(Player info)
+{
+
+}
+void BenchPlayer::printList()
+{
+
+}
+void BenchPlayer::reversePrint()
+{
+
+}
+
+//BENCHPLAYER.H BELOW!!!
+
+#ifndef GA4_BENCHPLAYER_H
+#define GA4_BENCHPLAYER_H
+#include "Player.h"
+#include <iostream>
+using namespace std;
+struct node
+{
+    Player stats;//I'm thinking this has to be player b/c we have multiple attributes to deal w/ per node
+    node *next, *prev;
+};
+struct node *head;//global ptr to node. Can be accessed everywhere in all fxns.
+class BenchPlayer:public Player
+{
+    //Unsorted doubly linked list of 7 players on bench
+public:
+    node *makeNewNode(Player);
+    void insertAtHead(Player);
+    void insertAtTail(Player);
+    void printList();
+    void reversePrint();
+};
+#endif //GA4_BENCHPLAYER_H
+
+//COURTPLAYER.CPP BELOW!!!
+
+#include "courtPlayer.h"
+#include <iostream>
+using namespace std;
+void courtPlayer::makeNode(int content)//I think I just constructed the circular LL?
+{
+    /*struct node *temp;//Make temporary node
+    temp = new(struct node);//Using new means dynamic allocation?
+    temp->info = content;//The info inside temp is set to whatever int gets passed to this fxn
+    if(last == NULL)//If the content of the last node is 0/NULL, which it should be
+    {
+        last = temp;//Last's empty content is now the content of temp
+        temp->next = last;//Pointer to temp?
+    }
+    else
+    {
+        temp->next = last->next;
+        last->next = temp;
+        last = temp;
+    }*/
+}
+void courtPlayer::addAtHead(int content)
+{
+    if(last == NULL)
+    {
+        cout << "List is empty." << endl;
+        return;
+    }
+    else
+    {
+        struct node *temp;
+        temp = new(struct node);
+        temp->info = content;
+        temp->next = last->next;
+        last->next = temp;
+
+    }
+}
+void courtPlayer::addAtTail(int content, int pos)
+{
+    if(last == NULL)
+    {
+        cout << "List is empty." << endl;
+    }
+    else
+    {
+        struct node *temp, *s;
+        s = last-> next;
+        for(int i = 0; i < pos-1; i++)
+        {
+            s = s->next;
+            if(s == last->next)
+            {
+                cout << "There are less than " << pos << " in the list." << endl;
+            }
+        }
+        temp = new(struct node);
+        temp->next = s->next;
+        temp->info = content;
+        s->next = temp;
+        if(s == last)
+        {
+            last = temp;
+        }
+    }
+}
+void courtPlayer::sortList()
+{
+    struct node *s, *ptr;
+    int temp;
+    if(last == NULL)
+    {
+        cout << "You can't sort an empty list." << endl;
+    }
+    s = last->next;
+    while(s != last)
+    {
+        ptr = s->next;
+        while(ptr != last->next)
+        {
+            if(ptr != last->next)
+            {
+                if(s->info > ptr->info)
+                {
+                    temp = s->info;
+                    s->info = ptr->info;
+                    ptr->info = temp;
+                }
+            }
+            else
+            {
+                break;
+            }
+            s = s->next;
+        }
+    }
+}
+void courtPlayer::displayList()
+{
+    //Just a basic idea of how to show the list.
+    //We'll have to get more specific.
+    struct node *var;
+    if(last == NULL)
+    {
+        cout << "List is empty." << endl;
+    }
+    var = last->next;
+    cout << "Circular Linked List:" << endl;
+    while(var != last)
+    {
+        cout << var->info << "->";
+        var = var->next;
+    }
+    cout << var->info << endl;
+}
+
+//COURTPLAYER.H BELOW!!!
+
+#ifndef GA4_COURTPLAYER_H
+#define GA4_COURTPLAYER_H
+#include "Player.h"
+#include <iostream>
+using namespace std;
+struct node
+{
+    int info;
+    struct node *next;
+}*last;
+class courtPlayer:public Player
+{
+    //sorted circular linked list of players on court sorted by player num from center
+public:
+    void makeNode(int);
+    void addAtHead(int);
+    void addAtTail(int, int);
+    void deleteNode(int);
+    void searchNodes(int);
+    void displayList();
+    void updateList();
+    void sortList();
+    courtPlayer()
+    {
+        last = NULL;
+    }
+};
+#endif //GA4_COURTPLAYER_H
+
+//PLAYER.CPP BELOW!!!
+
+#include "Player.h"
+#include <iostream>
+using namespace std;
+
+Player::Player()
+{
+    number, age, min = 0;
+}
+void Player::setNumber(int newNum)
+{
+    number = newNum;
+}
+void Player::setAge(int newAge)
+{
+    age = newAge;
+}
+int Player::getNumber()
+{
+    return number;
+}
+int Player::getAge()
+{
+    return age;
+}
+double Player::getMin()
+{
+    return min;
+}
+
+//PLAYER.H BELOW!!!
+
+#ifndef GA4_PLAYER_H
+#define GA4_PLAYER_H
+#include <iostream>
+using namespace std;
+class Player
+{
+private:
+    int number, age;
+    double min = age*.1;
+public:
+    Player();
+    ~Player();
+    void setNumber(int);
+    void setAge(int);
+    int getNumber();
+    int getAge();
+    double getMin();
+};
+#endif //GA4_PLAYER_H
+
+//MAIN.CPP BELOW!!!
+
+#include <iostream>
+#include "Player.h"
+#include "BenchPlayer.h"
+#include "courtPlayer.h"
+using namespace std;
+int main()
+{
+    Player lockerRoom[12];
+    srand(time(0));
+    for(int i = 0; i < 12; i++)
+    {
+        lockerRoom[i].setNumber(i+1);//They'll each get a player # 1-12
+        lockerRoom[i].setAge(18 + rand()%(40-18 +1));//Randomly set age from 18-40
+        //minutes is already set up based on player's age. I shouldn't need to state anything here
+    }
+    //randomly choose 5 players to be moved into the circular LL in class courtPlayer
+    //Every time time is up for a player, select a bench player from either side of the DLL and swap them out.
+
+
+
+
+
+    /*General how to make a circular linked list
+
+     in the addNode function:
+     if(root == null)
+     {
+     root = node;
+     root.nextNode = root;
+     }
+     else
+     {
+        current = root;
+        while(current.nexTNode != root)
+       {
+            current = current.nextNode;
+       }
+
+     }
+
+     If you're at the end of the LL, every last node will point to the root.
+
+
+     */
+
+    return 0;
+}
