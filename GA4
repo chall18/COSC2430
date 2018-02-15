@@ -225,3 +225,54 @@ temp = temp->next;
 
 cout << "Age: " << temp->stats.getAge() << temp->stats.getStatus() << endl;
 }
+
+void findHighestMin(node *&headNode)//pass court players here to decide who needs to be benched
+{
+    node *temp = headNode->next;//
+    double highestMin = headNode->next->stats.getMin();//next is the pointer to the node following the head, ->stats refers to its Player object, then use .getAge() to get that particular attribute out of the object
+    node *playerToMove = NULL;
+    while(temp != headNode)
+    {
+        if(highestMin < temp->stats.getMin())//If we find a larger age during the search
+        {
+            highestMin = temp->stats.getMin();//Assign that newly found higher age to highestAge
+            playerToMove = temp;
+        }
+        temp = temp->next;//move along, like saying i++
+    }
+    //addPlayer is reliant upon knowing the player's status of B or C, so I could just change the oldest player's status and THEN send it to
+    //addPlayer. Then the fxn would take care of the rest, I think.
+    playerToMove->stats.setStatus('B');//switch the playing status of the oldest player
+    addPlayer(playerToMove, headNode)//Add this newly benched player to the bench, then we need to delete his/her info from their node in bench
+    //Then copy info from replacement court player to the newly opened node. No need to delete and replace nodes constantly. ;
+}
+void clearNodeStats(node *&head, node *player)
+{
+    //pass in head of list so we know which list we're dealing with
+    //player is player's node we need to clear out because they're moving lists
+    node *temp = head->next;
+    if(head == NULL)
+    {
+        cout << "List is empty." << endl;
+    }
+    else
+    {
+        while(temp != head)
+        {
+            if(temp != player)
+            {
+                temp->next;
+            }
+            else
+            {
+                //if temp has found the node we specifically want to clear out
+                player->stats.setAge(0);
+                player->stats.setNumber(0);
+                player->stats.setStatus('');
+                //Now the stats still exist, but they're vacant.
+                //We can copy in the stats of the player that's moving to take this player's spot, and then we don't have to delete and re-make
+                //nodes all the time!
+            }
+        }
+    }
+}
