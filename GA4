@@ -1,3 +1,79 @@
+#ifndef GA4_PLAYER_H
+#define GA4_PLAYER_H
+#include <iostream>
+class Player
+{
+private:
+    int number, age;
+    double min;
+    char status;
+public:
+    Player();
+    void setNumber(int);
+    int getNumber();
+    int getAge();
+    void setAge(int);
+    double getMin();
+    void setStatus(char);
+    char getStatus();
+    //double linked for bench players
+    //circular for courtplayers
+};
+struct node
+{
+    Player stats;
+    node *prev = NULL;
+    node *next = NULL;
+    node(Player info)
+    {
+        stats = info;
+    }
+};
+#endif //GA4_PLAYER_H
+
+
+=====PLAYER.CPP======
+
+#include "Player.h"
+#include <iostream>
+using namespace std;
+Player::Player()
+{
+    age = 18 + rand()%(40-18 +1);
+    number = 0;
+    min = age*0.1;
+    status = 'B';
+}
+void Player::setNumber(int newNum)
+{
+    number = newNum;
+}
+int Player::getNumber()
+{
+    return number;
+}
+void Player::setAge(int newAge)
+{
+    age = newAge;
+}
+int Player::getAge()
+{
+    return age;
+}
+double Player::getMin()
+{
+    return min;
+}
+void Player::setStatus(char newStatus)
+{
+    status = newStatus;
+}
+char Player::getStatus()
+{
+    return status;
+}
+
+
 #include "Player.h"
 #include <iostream>
 #include <time.h>
