@@ -1,0 +1,641 @@
+//EXAMPLE.TXT
+
+17 Martin
+4 Raphael
+1 Israel
+8 Evelin
+18 Susy
+0 Howard
+19 Brian
+
+//AVL.H
+
+#ifndef AVLQuiz_AVL_H
+#define AVLQuiz_AVL_H
+#include <iostream>
+#include "assert.h"
+
+using namespace std;
+template <class T>
+struct node
+{
+    T data;
+    int bfactor;
+    node<T> *left;
+    node<T> *right;
+};
+template <class T>
+class avl
+{
+public:
+    int nodeCount(T *leaf)
+    {
+        if(leaf == NULL)
+        {
+            return 0;
+        }
+        else if(leaf->left == NULL && leaf->right == NULL)
+        {
+            return 1;
+        }
+        else
+        {
+            return nodeCount(leaf->left) + nodeCount(leaf->right);
+        }
+    }
+    bool isEmpty() const
+    {
+        return(root == NULL);
+    }
+    void inOrderTraversal() const
+    {
+        inOrder(root);
+    }
+    void preOrderTraversal() const
+    {
+        preOrder(root);
+    }
+    void postOrderTraversal() const
+    {
+        postOrder(root);
+    }
+    int treeHeight() const
+    {
+        return height(root);
+    }
+    void destroyTree()
+    {
+        destroy(root);
+    }
+    avl(const avl<T> &otherTree)
+    {
+        if(otherTree.root == NULL)
+        {
+            root = NULL;
+        }
+        else
+        {
+            copyTree(root, otherTree.root);
+        }
+    }
+    avl()
+    {
+        root = NULL;
+    }
+    ~avl()
+    {
+        destroy(root);
+    }
+    bool search(string searchItem)
+    {
+        node<T> *current;
+        bool found = false;
+        if (root == NULL)
+        {
+            cerr << "Can't search an empty tree." << endl;
+        }
+        else
+        {
+            current = root;
+            while(current != NULL && !found)
+            {
+                if(current->data.name == searchItem)
+                {
+                    found = true;
+                }
+                else if(current->data.name > searchItem)
+                {
+                    current = current->left;
+                }
+                else
+                {
+                    current = current->right;
+                }
+            }
+            return found;
+        }
+    }
+
+    node<T> *searchForFood(string searchItem)
+    {
+        node<T> *current;
+        bool found = false;
+        if (root == NULL)
+        {
+            cerr << "Can't search an empty tree." << endl;
+        }
+        else
+        {
+            current = root;
+            while (current != NULL)
+            {
+                if (current->data.name == searchItem)
+                {
+                    current->data.favorite = 1;
+                    return current;
+                }
+                else if (current->data.name > searchItem)
+                {
+                    current = current->left;
+                }
+                else
+                {
+                    current = current->right;
+                }
+            }
+            cout << "Food not found.\n";
+        }
+    }
+    void searchForFavorite(int searchItem)
+    {
+        node<T> *current;
+        bool found = false;
+        if (root == NULL)
+        {
+            cerr << "Can't search an empty tree." << endl;
+        }
+        else
+        {
+            current = root;
+            while (current != NULL)
+            {
+                if (current->data.calories == searchItem)
+                {
+                    cout << "setting " << current->data.name << " to favorite\n";
+                    current->data.favorite = 1;
+                    return;
+                }
+                else if (current->data.calories > searchItem)
+                {
+                    current = current->left;
+                }
+                else
+                {
+                    current = current->right;
+                }
+            }
+            //cout << "Favorite not found.\n";
+        }
+    }
+    void rotateToLeft(node<T>* &root)
+    {
+        node<T> *p; //pointer to the root of the
+        //right subtree of root
+        if (root == NULL)
+            cerr << "Error in the tree" << endl;
+        else if (root->right == NULL)
+            cerr << "Error in the tree:"
+                 << " No right subtree to rotate." << endl;
+        else
+        {
+            p = root->right;
+            root->right = p->left; //the left subtree of p becomes
+            //the right subtree of root
+            p->left = root;
+            root = p; //make p the new root node
+        }
+    }//rotateLeft
+
+    void rotateToRight(node<T>* &root)
+    {
+        node<T> *p; //pointer to the root of
+        //the left subtree of root
+        if (root == NULL)
+            cerr << "Error in the tree" << endl;
+        else if (root->left == NULL)
+            cerr << "Error in the tree:"
+                 << " No left subtree to rotate." << endl;
+        else
+        {
+            p = root->left;
+            root->left = p->right; //the right subtree of p becomes
+            //the left subtree of root
+            p->right = root;
+            root = p; //make p the new root node
+        }
+    }//end rotateRight
+
+    void balanceFromLeft(node<T>* &root)
+    {
+        node<T> *p;
+        node<T> *w;
+        p = root->left; //p points to the left subtree of root
+        switch (p->bfactor)
+        {
+            case -1:
+                root->bfactor = 0;
+                p->bfactor = 0;
+                rotateToRight(root);
+                break;
+            case 0:
+                cerr << "Error: Cannot balance from the left." << endl;
+                break;
+            case 1:
+                w = p->right;
+                switch (w->bfactor) //adjust the balance factors
+                {
+                    case -1:
+                        root->bfactor = 1;
+                        p->bfactor = 0;
+                        break;
+                    case 0:
+                        root->bfactor = 0;
+                        p->bfactor = 0;
+                        break;
+                    case 1:
+                        root->bfactor = 0;
+                        p->bfactor = -1;
+                }//end switch
+                w->bfactor = 0;
+                rotateToLeft(p);
+                root->left = p;
+                rotateToRight(root);
+        }//end switch;
+    }//end balanceFromLeft
+
+    void balanceFromRight(node<T>* &root)
+    {
+        node<T> *p;
+        node<T> *w;
+        p = root->right; //p points to the left subtree of root
+        switch (p->bfactor)
+        {
+            case -1:
+                w = p->left;
+                switch (w->bfactor) //adjust the balance factors
+                {
+                    case -1:
+                        root->bfactor = 0;
+                        p->bfactor = 1;
+                        break;
+                    case 0:
+                        root->bfactor = 0;
+                        p->bfactor = 0;
+                        break;
+                    case 1:
+                        root->bfactor = -1;
+                        p->bfactor = 0;
+                }//end switch
+                w->bfactor = 0;
+                rotateToRight(p);
+                root->right = p;
+                rotateToLeft(root);
+                break;
+            case 0:
+                cerr << "Error: Cannot balance from the left." << endl;
+                break;
+            case 1:
+                root->bfactor = 0;
+                p->bfactor = 0;
+                rotateToLeft(root);
+        }//end switch;
+    }//end balanceFromRight
+
+    void insertByID(node<T>* &root, node<T> *newNode, bool& isTaller)
+    {
+        if (root == NULL)
+        {
+            root = newNode;
+            isTaller = true;
+        }
+        else if (root->data.first == newNode->data.first)
+        {
+            cerr << "No duplicates are allowed." << endl;
+        }
+        else if (root->data.first > newNode->data.first) //newItem goes in
+        {
+            insertByID(root->left, newNode, isTaller);
+            if (isTaller) //after insertion, the subtree grew in height
+            {
+                switch (root->bfactor)
+                {
+                    case -1:
+                        balanceFromLeft(root);
+                        isTaller = false;
+                        break;
+                    case 0:
+                        root->bfactor = -1;
+                        isTaller = true;
+                        break;
+                    case 1:
+                        root->bfactor = 0;
+                        isTaller = false;
+                }//end switch
+            }
+        }//end if
+        else
+        {
+            insertByID(root->right, newNode, isTaller);
+            if (isTaller) //after insertion, the subtree grew in
+                //height
+                switch (root->bfactor)
+                {
+                    case -1:
+                        root->bfactor = 0;
+                        isTaller = false;
+                        break;
+                    case 0:
+                        root->bfactor = 1;
+                        isTaller = true;
+                        break;
+                    case 1:
+                        balanceFromRight(root);
+                        isTaller = false;
+                }//end switch
+        }//end else
+    }//insertIntoAVL
+    void insertByName(node<T>* &root, node<T> *newNode, bool& isTaller)
+    {
+        if (root == NULL)
+        {
+            root = newNode;
+            isTaller = true;
+        }
+        else if (root->data.second == newNode->data.second)
+        {
+            cerr << "No duplicates are allowed." << endl;
+        }
+        else if (root->data.second > newNode->data.second) //newItem goes in
+        {
+            insertByName(root->left, newNode, isTaller);
+            if (isTaller) //after insertion, the subtree grew in height
+            {
+                switch (root->bfactor)
+                {
+                    case -1:
+                        balanceFromLeft(root);
+                        isTaller = false;
+                        break;
+                    case 0:
+                        root->bfactor = -1;
+                        isTaller = true;
+                        break;
+                    case 1:
+                        root->bfactor = 0;
+                        isTaller = false;
+                }//end switch
+            }
+        }//end if
+        else
+        {
+            insertByName(root->right, newNode, isTaller);
+            if (isTaller) //after insertion, the subtree grew in
+                //height
+                switch (root->bfactor)
+                {
+                    case -1:
+                        root->bfactor = 0;
+                        isTaller = false;
+                        break;
+                    case 0:
+                        root->bfactor = 1;
+                        isTaller = true;
+                        break;
+                    case 1:
+                        balanceFromRight(root);
+                        isTaller = false;
+                }//end switch
+        }//end else
+    }//insertIntoAVL
+    void insertforIBID(const T &newItem)
+    {
+        bool isTaller = false;
+        node<T> *newNode;
+        newNode = new node<T>;
+        newNode->data = newItem;
+        newNode->bfactor = 0;
+        newNode->left = NULL;
+        newNode->right = NULL;
+        insertByID(root, newNode, isTaller);
+    }
+    void insertforIBN(const T &newItem)
+    {
+        bool isTaller = false;
+        node<T> *newNode;
+        newNode = new node<T>;
+        newNode->data = newItem;
+        newNode->bfactor = 0;
+        newNode->left = NULL;
+        newNode->right = NULL;
+        insertByName(root, newNode, isTaller);
+    }
+    void deleteNode(const T& deleteItem)
+    {
+        node<T> *current, *trailCurrent;
+        bool found = false;
+        if(root == NULL)
+        {
+            cout << "Can't delete from an empty tree." << endl;
+        }
+        else
+        {
+            current = root;
+            trailCurrent = root;
+            while(current != NULL && !found)
+            {
+                if(current->data == deleteItem)
+                {
+                    found = true;
+                }
+                else
+                {
+                    trailCurrent = current;
+                    if(current->data > deleteItem)
+                    {
+                        current = current->left;
+                    }
+                    else
+                    {
+                        current = current->right;
+                    }
+                }
+            }
+            if(current == NULL)
+            {
+                cout << "The item isn't in the tree." << endl;
+            }
+            else if(found)
+            {
+                if(current == root)
+                {
+                    deleteFromTree(root);
+                }
+                else if(trailCurrent->data > deleteItem)
+                {
+                    deleteFromTree(trailCurrent->left);
+                }
+                else
+                {
+                    deleteFromTree(trailCurrent->right);
+                }
+            }
+        }
+    }
+protected:
+    node<T> *root;
+private:
+    void copyTree(node<T>* &copiedTreeRoot, node<T>* otherTreeRoot)
+    {
+        if (otherTreeRoot == NULL)
+        {
+            copiedTreeRoot = NULL;
+        }
+        else
+        {
+            copiedTreeRoot = new node<T>;
+            copiedTreeRoot->data = otherTreeRoot->data;
+            copyTree(copiedTreeRoot->left, otherTreeRoot->left);
+            copyTree(copiedTreeRoot->right, otherTreeRoot->right);
+        }
+    }
+    void destroy(node<T>* &p)
+    {
+        if(p != NULL)
+        {
+            destroy(p->left);
+            destroy(p->right);
+            delete p;
+            p = NULL;
+        }
+    }
+    void inOrder(node<T> *p) const
+    {
+        if(p != NULL)
+        {
+            inOrder(p->left);
+            cout << p->data.first << " " << p->data.second << endl;
+            inOrder(p->right);
+        }
+    }
+    void preOrder(node<T> *p) const
+    {
+        if(p != NULL)
+        {
+            cout << p->data.first << " " << p->data.second;
+            cout << endl;
+            preOrder(p->left);
+            preOrder(p->right);
+        }
+    }
+    void postOrder(node<T> *p) const
+    {
+        if(p != NULL)
+        {
+            postOrder(p->left);
+            postOrder(p->right);
+            cout << p->data.first << " " << p->data.second;
+            cout << endl;
+        }
+    }
+    int height(node<T> *p) const
+    {
+        if(p == NULL)
+        {
+            return 0;
+        }
+        else
+        {
+            return 1 + max(height(p->left), height(p->right));
+        }
+    }
+    int max(int x, int y) const
+    {
+        if(x >= y)
+        {
+            return x;
+        }
+        else
+        {
+            return y;
+        }
+    }
+    void deleteFromTree(node<T>* &p)
+    {
+        node<T> *current, *trailCurrent, *temp;
+        if(p == NULL)
+        {
+            cerr << "Error: The node to be deleted is NULL." << endl;
+        }
+        else if(p->left == NULL && p->right == NULL)
+        {
+            temp = p;
+            p = NULL;
+            delete temp;
+        }
+        else if(p->left == NULL)
+        {
+            temp = p;
+            p = temp->right;
+            delete temp;
+        }
+        else if(p->right == NULL)
+        {
+            temp = p;
+            p = temp->left;
+            delete temp;
+        }
+        else
+        {
+            current = p->left;
+            trailCurrent = NULL;
+            while(current->right != NULL)
+            {
+                trailCurrent = current;
+                current = current->right;
+            }
+            p->data = current->data;
+            if(trailCurrent == NULL)
+            {
+                p->left = current->left;
+            }
+            else
+            {
+                trailCurrent->right = current->left;
+            }
+            delete current;
+        }
+    }
+};
+#endif //AVLQuiz_AVL_H
+
+//MAIN.CPP
+
+#include <iostream>
+#include <fstream>
+#include <utility>
+#include "avl.h"
+using namespace std;
+int main()
+{
+    avl<pair<int, string>> tree;
+    int id;
+    string name;
+    pair <int, string> person;
+    ifstream inFile("Example.txt");
+    int choice;
+    cout << "Should the AVL be constructed according to ID (1) or name (2)? Please enter your preference: ";
+    cin >> choice;
+    if(choice == 1)//insertion by ID#
+    {
+        while(inFile >> id >> name)
+        {
+            person = make_pair(id, name);
+            //cout << person.first << " " << person.second << endl;
+            tree.insertforIBID(person);
+        }
+        tree.postOrderTraversal();
+    }
+    else//insertion by name
+    {
+        while(inFile >> id >> name)
+        {
+            person = make_pair(id, name);
+            tree.insertforIBN(person);
+        }
+        tree.postOrderTraversal();
+    }
+    inFile.close();
+
+    return 0;
+
+}
