@@ -1,0 +1,81 @@
+//MAIN.CPP
+
+#include <iostream>
+using namespace std;
+struct node
+{
+    node *next;
+    int data;
+};
+
+void makeNewNode(node *&head, int newData)
+{
+    node *newNode = new node;
+    newNode->data = newData;
+    if(head == NULL)
+    {
+        head = newNode;
+        newNode->next = head;
+    }
+    else
+    {
+        newNode->next = head->next;
+        head->next = newNode;
+        head = newNode;
+    }
+}
+int findMin(node *&head)
+{
+    node *temp = head->next;
+    int min = temp->data;
+    while(temp != head)
+    {
+        if(temp->data < min)
+        {
+            min = temp->data;
+        }
+        temp = temp->next;
+    }
+    return min;
+}
+void deleteMin(node *&head, int min)
+{
+    node *temp = head->next;
+    node *target;
+    while(temp != head)
+    {
+        if(temp->data == min)
+        {
+            target = temp;
+            head->next = temp->next;
+            delete temp;
+        }
+        temp = temp->next;
+    }
+}
+void printList(node *&head)
+{
+    node *temp = head->next;
+    while(temp != head)
+    {
+        cout << temp->data << " ";
+        temp = temp->next;
+    }
+}
+int main()
+{
+    node *head = NULL;
+    for(int i = 0; i < 6; i++)
+    {
+        makeNewNode(head, i);
+    }
+    for(node *current = head->next; current != head; current = current->next)
+    {
+        printList(head);
+        cout << endl;
+        int currentMin = findMin(head);
+        deleteMin(head, currentMin);
+    }
+    cout << "Empty!" << endl;
+    return 0;
+}
