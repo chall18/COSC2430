@@ -1,0 +1,178 @@
+//STACK.H
+
+//
+// Created by Caitie Hall on 3/7/18.
+//
+
+#ifndef EQNBALANCE_STACK_H
+#define EQNBALANCE_STACK_H
+#include "node.h"
+#include <iostream>
+using namespace std;
+
+class stack
+{
+public:
+    node *head;
+    stack();
+    void push(char newData);
+    void pop();
+    bool isEmpty();
+    bool match(char open, char close);
+    char peek();
+};
+
+
+#endif //EQNBALANCE_STACK_H
+
+
+//STACK.CPP
+
+//
+// Created by Caitie Hall on 3/7/18.
+//
+
+#include "stack.h"
+using namespace std;
+stack::stack()
+{
+    head = NULL;
+}
+void stack::push(char newData)
+{
+    node *newNode = new node(newData);
+    if(isEmpty())
+    {
+        head = newNode;
+        newNode->next = NULL;//pointing downward
+        newNode->prev = NULL;//pointing upward
+    }
+    else
+    {
+        newNode->next = head;//newNode is top of stack, so next should point downward @ head
+        newNode->prev = NULL;//nothing is on top of newNode so prev points @ nothing
+        head->prev = newNode;//former head points up at the new top of the stack
+        head = newNode;//redefine the top of the stack
+    }
+}
+void stack::pop()
+{
+    node *temp = head;
+    if(!isEmpty())
+    {
+        head = head->next;//move head to point @ 2nd node so we don't accidentally delete it and ruin the LL
+        temp->next = NULL;//remove link b/t top of stack and the next node
+        temp->prev = NULL;
+        delete temp;
+    }
+}
+bool stack::isEmpty()
+{
+    if(head == NULL)
+    {
+        return true;
+    }
+    return false;
+}
+char stack::peek()
+{
+    return head->data;
+}
+bool stack::match(char open, char close)
+{
+    if(open == '{' && close == '}')
+    {
+        return true;
+    }
+    else if(open == '[' && close == ']')
+    {
+        return true;
+    }
+    else if(open == '(' && close == ')')
+    {
+        return true;
+    }
+    return false;
+}
+
+
+//NODE.H
+
+//
+// Created by Caitie Hall on 3/7/18.
+//
+
+#ifndef EQNBALANCE_NODE_H
+#define EQNBALANCE_NODE_H
+
+
+class node
+{
+public:
+    node *next, *prev;
+    char data;
+    node(char newChar);
+};
+
+
+#endif //EQNBALANCE_NODE_H
+
+
+//NODE.CPP
+
+//
+// Created by Caitie Hall on 3/7/18.
+//
+
+#include "node.h"
+#include <iostream>
+using namespace std;
+node::node(char newChar)
+{
+    data = newChar;
+}
+
+//MAIN.CPP
+
+#include <iostream>
+#include "stack.h"
+#include "node.h"
+using namespace std;
+int main()
+{
+    string eqn = "[(2+5)+(1+3)-(4+7)";
+    stack obj;
+    bool check = false;
+    char top;
+    for(int i = 0; i < eqn.length(); i++)
+    {
+        if(eqn[i] == '(' || eqn[i] == '{' || eqn[i] == '[')
+        {
+            //Push only opening braces into the stack
+            obj.push(eqn[i]);
+        }
+        if(eqn[i] == ')' || eqn[i] == '}' || eqn[i] == ']')
+        {
+            //if one of the chars w/in eqn happens to be a closing brace of some sort
+            top = obj.head->data;
+            if(obj.match(top, eqn[i]))
+            {
+                check = true;
+                obj.pop();
+            }
+            if(check)
+            {
+                cout << top << " and " << eqn[i] << " are valid." << endl;
+            }
+        }
+    }
+    if(obj.isEmpty())//If the stack is empty and each brace has a match
+    {
+        cout << "Equation is balanced." << endl;
+    }
+    else
+    {
+        cout << "Equation is not balanced." << endl;
+    }
+    return 0;
+}
