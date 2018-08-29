@@ -1,0 +1,1232 @@
+//ARGUMENTMANAGER.H
+
+#ifndef ARG_MGR_H
+#define ARG_MGR_H
+
+#include <map>
+#include <string>
+#include <iostream>
+#include <sstream>
+using namespace std;
+
+class ArgumentManager
+{
+private:
+    map<string, string> argumentMap;
+    //void mergeMap(map<string, string> &source, map<string, string> &destination);
+public:
+    ArgumentManager(){ }
+    ArgumentManager(int _argc, char *argv[], char delimiter=';');
+    ArgumentManager(string rawArguments, char delimiter=';');
+    void parse(int argc, char *argv[], char delimiter=';');
+    void parse(string rawArguments, char delimiter=';');
+    string get(string argumentName);
+    string toString();
+    friend ostream& operator << (ostream &out, ArgumentManager &am);
+};
+
+#endif
+
+//ARGUMENTMANGER.CPP
+
+#include "ArgumentManager.h"
+
+//void ArgumentManager::mergeMap(map<string, string> &source, map<string, string> &destination)
+//{
+//	for(map<string, string>::iterator iter = source.begin(); iter != source.end(); iter++)
+//	{
+//		destination[iter->first] = iter->second;
+//	}
+//}
+
+void ArgumentManager::parse(string rawArguments, char delimiter)
+{
+    stringstream currentArgumentName;
+    stringstream currentArgumentValue;
+    bool argumentNameFinished = false;
+
+    for(unsigned int i=0; i<=rawArguments.length(); ++i)
+    {
+        if(i == rawArguments.length() || rawArguments[i] == delimiter)
+        {
+            if(currentArgumentName.str() != "")
+            {
+                argumentMap[currentArgumentName.str()] = currentArgumentValue.str();
+            }
+            // reset
+            currentArgumentName.str("");
+            currentArgumentValue.str("");
+            argumentNameFinished = false;
+        }
+        else if(rawArguments[i] == '=')
+        {
+            argumentNameFinished = true;
+        }
+        else
+        {
+            if(argumentNameFinished)
+            {
+                currentArgumentValue << rawArguments[i];
+            }
+            else
+            {
+                // ignore any spaces in argument names.
+                if(rawArguments[i] == ' ')
+                    continue;
+                currentArgumentName << rawArguments[i];
+            }
+        }
+    }
+}
+
+void ArgumentManager::parse(int argc, char *argv[], char delimiter)
+{
+    if(argc > 1)
+    {
+        for(int i=1; i<argc; i++)
+        {
+            parse(argv[i], delimiter);
+        }
+    }
+}
+
+ArgumentManager::ArgumentManager(int argc, char *argv[], char delimiter)
+{
+    parse(argc, argv, delimiter);
+}
+
+ArgumentManager::ArgumentManager(string rawArguments, char delimiter)
+{
+    parse(rawArguments, delimiter);
+}
+
+string ArgumentManager::get(string argumentName)
+{
+    map<string, string>::iterator iter = argumentMap.find(argumentName);
+
+    //If the argument is not found, return a blank string.
+    if(iter == argumentMap.end())
+    {
+        return "";
+    }
+    else
+    {
+        return iter->second;
+    }
+}
+
+string ArgumentManager::toString()
+{
+    stringstream ss;
+    for(map<string, string>::iterator iter = argumentMap.begin(); iter != argumentMap.end(); ++iter)
+    {
+        ss << "Argument name: " << iter->first << endl;
+        ss << "Argument value: " << iter->second << endl;
+    }
+    return ss.str();
+}
+
+ostream& operator << (ostream &out, ArgumentManager &am)
+{
+    out << am.toString();
+    return out;
+}
+
+
+//STACK.H
+
+#ifndef HW2_STACK_H
+#define HW2_STACK_H
+#include <iostream>
+using namespace std;
+template <class T>
+struct node
+{
+    T data;
+    node <T> *next;
+};
+template <class T>
+class stack
+{
+private:
+    node <T> *head;
+    void copyStack(const stack<T> & copy);
+public:
+    int counter;
+    int stackSize();
+    stack();
+    stack(const stack<T> & copy);//copy constructor
+    ~stack();//destructor
+    void initializeStack();
+    void push(const T& newData);
+    T giveTop() const;
+    void pop();
+    bool operandCheck(T current);
+    bool operatorCheck(T current);
+    bool isEmpty();
+    int opWeight(T currentOp);
+    bool isParen(T current);
+    bool hasHigherPrecedence(T top, T cuOperator);
+};
+#endif //HW2_STACK_H
+
+//STACK.CPP
+
+//
+// Created by Caitie Hall on 3/5/18.
+//
+
+#include "stack.h"
+using namespace std;
+template <class T>
+stack<T>::stack()
+{
+    head = NULL;
+    counter = 0;
+}
+template <class T>
+stack<T>::stack(const stack<T> & copy)
+{
+    head = NULL;
+    copyStack(copy);
+    //copy constructor
+}
+template <class T>
+stack<T>::~stack()
+{
+    initializeStack();
+}
+template <class T>
+void stack<T>::initializeStack()
+{
+    node <T> *temp;
+    while(head != NULL)
+    {
+        temp = head;
+        head = head->next;
+        delete temp;
+    }
+}
+template <class T>
+void stack<T>::push(const T& newData)
+{
+    node <T> *newNode = new node <T>;
+    newNode->data = newData;
+    newNode->next = head;
+    head = newNode;
+    counter++;
+}
+template <class T>
+T stack<T>::giveTop() const
+{
+    if(head == NULL)
+    {
+        return 0;
+    }
+    return head->data;
+}
+template <class T>
+void stack<T>::pop()
+{
+    node <T> *temp;
+    if(head != NULL)
+    {
+        temp = head;
+        head = head->next;
+        delete temp;
+    }
+    else
+    {
+        cout << "Stack is empty." << endl;
+    }
+    counter--;
+}
+template <class T>
+bool stack<T>::isEmpty()
+{
+    if(head == NULL)
+    {
+        return true;
+    }
+    return false;
+}
+template <class T>
+void stack<T>::copyStack(const stack<T> & copy)
+{
+    node <T> *newNode, *current, *tail;
+    if(head != NULL)
+    {
+        //If the current stack isn't empty, then we have something to copy. Let's initialize a new stack!
+        initializeStack();
+    }
+    if(copy.head == NULL)
+    {
+        head = NULL;
+    }
+    else
+    {
+        current = copy.head;
+        head = new node<T>;
+        head->data = current->data;
+        head->next = NULL;
+        tail = head;
+        current = current->next;
+        while(current != NULL)
+        {
+            newNode = new node<T>;
+            newNode->data = current->data;
+            newNode->next = NULL;
+            tail->next = newNode;
+            tail = newNode;
+            current = current->next;
+        }
+    }
+}
+template <class T>
+int stack<T>::opWeight(T currentOp)
+{
+    int operatorWeight = 0;
+    if(currentOp == "+" || currentOp == "-")
+    {
+        operatorWeight = 1;
+    }
+    else if(currentOp == "*" || currentOp == "/")
+    {
+        operatorWeight = 2;
+    }
+    return operatorWeight;
+}
+template <class T>
+bool stack<T>::hasHigherPrecedence(T top, T cuOperator)
+{
+    //should return true if top of the stack is of higher precedence than our current operator
+    //returns false is current operator has a higher or equal precedence
+    int stackTopWeight = opWeight(top);
+    int cuOpWeight = opWeight(cuOperator);
+    if(stackTopWeight > cuOpWeight)
+    {
+        return true;
+    }
+    return false;
+}
+template <class T>
+bool stack<T>::isParen(T current)
+{
+    //should return true if the current char we're looking at is an opening parenthesis.
+    //returns false if it's not
+    return(current == '(');
+}
+template <class T>
+int stack<T>::stackSize()
+{
+    return counter;
+}
+template <class T>
+bool stack<T>::operandCheck(T current)
+{
+    //returns true if current char in the string eqn is an operand
+    //returns false if it is an operator
+    if(current >= "0" && current <= "9")
+    {
+        return true;
+    }
+    return false;
+}
+template <class T>
+bool stack<T>::operatorCheck(T current)
+{
+    //Should return true if char current is any of the below operators, returns false otherwise.
+    //Parenthesis will have a separate check. Not dealing w/ that here.
+    if((current == "+" || current == "-" || current == "*" || current == "/"))
+    {
+        return true;
+    }
+    return false;
+}
+
+//MAIN.CPP
+
+#include <iostream>
+#include <fstream>
+#include <algorithm>
+#include <string>
+#include "stack.h"
+#include <time.h>
+#include "stack.cpp"
+#include "ArgumentManager.h"
+
+string addNum(string num1, string num2);
+int postFixSize = 0;
+
+string *inToPostConversion(string eqn[], int infix_size)
+{
+    //cout << "Inside postfix" << endl;
+    string temp;
+    string goAway;
+    stack <string> operands;
+    stack <string> operators;
+    int start = 0;
+    if(eqn[0] == "-")
+    {
+        //cout << "eqn[0] == " << eqn[0] << endl;
+        temp += eqn[0];
+        start++;
+    }
+    else if(eqn[0] == "+")
+    {
+        eqn[0] = "";
+        start++;
+    }
+    for(int i = start; i < infix_size; i++)
+    {
+        if(eqn[i] == "(")
+        {
+            operators.push(eqn[i]);
+            //cout << "Top of operator stack is: " << operators.giveTop() << endl;
+        }
+        else if((eqn[i-1] == "(" || eqn[i-1] == "*" || eqn[i-1] == "/") && (eqn[i] == "+" || eqn[i] == "-"))
+        {
+            //Accounting for operands w/ actual signs
+            if(eqn[i] == "+")
+            {
+                temp += "";
+            }
+            if(eqn[i] == "-")
+            {
+                //cout << "eqn[i-1] = " << eqn[i-1] << " and eqn[i] is " << eqn[i] << ". " << eqn[i] << " is a negative operand." << endl;
+                temp += eqn[i];//add + or - to temp so it gets put into the operand stack
+                //cout << "Temp is currently: " << temp << endl;
+            }
+        }
+        else if(operands.operandCheck(eqn[i]))
+        {
+            //Once we've hit an operand, I want to make sure we keep the entire # together. (Don't accidentally separate digits.)
+            //So we'll keep adding to temp as long as operandCheck is true. (Only #'s, no symbols.)
+            temp += eqn[i];
+            //cout << "Temp is currently: " << temp << endl;
+        }
+        else if(operators.operatorCheck(eqn[i]))//once we've hit an operator
+        {
+            //The code will only reach here once we've stopped seeing operands and hit an operator, so now we push what's in temp.
+            if(temp.length() > 0)
+            {
+                operands.push(temp);
+            }
+            //cout << "We've hit an operator:" << eqn[i] << ". Will now push " << temp << " to operand stack." << endl;
+            temp = "";
+            //cout << "Operands stack top is: " << operands.giveTop() << endl;
+            //cout << "Current operator: " << eqn[i] << endl;
+            if(operators.isEmpty())//If the operator stack is empty, no dealing w/ precedence. Just push.
+            {
+                //cout << "Stack is empty. Pushing " << eqn[i] << " to operator stack." << endl;
+                operators.push(eqn[i]);
+                //cout << operators.giveTop() << " is now top of operator stack." << endl;
+            }
+            else if(!operators.isEmpty())//Stack's not empty. Now we have to deal w/ operator precedence
+            {
+                //cout << "Operator stack isn't empty." << endl;
+                if(operators.opWeight(operators.giveTop()) == operators.opWeight(eqn[i]))
+                {
+                    //cout << operators.giveTop() << " and " << eqn[i] << " are of equal precedence.";
+                    operands.push(operators.giveTop());
+                    operators.pop();
+                    operators.push(eqn[i]);
+                }
+                else if(!operators.hasHigherPrecedence(operators.giveTop(), eqn[i]))//If the current stack top DOES NOT have higher precedence than eqn[i]
+                {
+                    //cout << operators.giveTop() << " DOES NOT have higher precedence than " << eqn[i] << endl;
+                    operators.push(eqn[i]);//push eqn[i] to stack
+                    //cout << eqn[i] << " pushed to operator stack. Operator top is: " << operators.giveTop() << endl;
+                }
+                else
+                {
+                    //cout << operators.giveTop() << " DOES have higher precedence than " << eqn[i] << endl;
+                    if(operators.hasHigherPrecedence(operators.giveTop(), eqn[i]))//If stack does DOES have higher precedence than eqn[i]
+                    {
+                        //I want to keep popping from the top of the operator stack as long as eqn[i] has a higher precedence, so I think a loop is necessary
+                        //It won't always be as easy as one pop.
+                        //cout << "Pushing " << operators.giveTop() << " to operand stack." << endl;
+                        operands.push(operators.giveTop());//We have to keep the operators somewhere, I guess.
+                        //cout << "Current top of operand stack is: " << operands.giveTop() << endl;
+                        operators.pop();//Now pop the top off.
+                    }
+                    //Once we exit the loop, the current top should be of equal or lesser precedence than eqn[i], so NOW we can push eqn[i] to stack
+                    //cout << "We have exited the loop. So now we push " << eqn[i] << " to operators stack." << endl;
+                    operators.push(eqn[i]);
+                    //cout << "Top of operators stack is: " << operators.giveTop() << endl;
+                }
+            }
+        }
+        else if(eqn[i] == ")")
+        {
+            //cout << "We've found a closing parenthesis." << endl;
+            if(temp.length() != 0)
+            {
+                operands.push(temp);
+            }
+            //cout << temp << " pushed to operand stack." << endl;
+            //cout << "Top of operand stack is: " << operands.giveTop() << endl;
+            temp = "";
+            while(operators.giveTop() != "(")
+            {
+                operands.push(operators.giveTop());
+                //cout << "Pushing top of operator stack, " << operators.giveTop() << ", to operands stack." << endl;
+                //cout << "Operands top is: " << operands.giveTop() << endl;
+                operators.pop();
+            }
+            //While loop will be broken when we see a "(".
+            //Pop w/o adding to operands stack
+            //cout << "Top of operator stack is: " << operators.giveTop() << ". Popping to get rid of it." << endl;
+            operators.pop();
+            //cout << "Size of operator stack: " << operators.stackSize() << endl;
+        }
+    }
+    if(temp != "")
+    {
+        //cout << "Temp is currently: " << temp << ". Pushing last temp to operands stack." << endl;
+        operands.push(temp);
+        temp = "";
+    }
+    while(!operators.isEmpty())
+    {
+        //cout << "Operators stack isn't empty. Stack size is " << operators.stackSize() << ". Top of stack is: " << operators.giveTop() << endl;
+        //cout << "Pushing " << operators.giveTop() << " to operand stack." << endl;
+        operands.push(operators.giveTop());
+        //cout << "Top of operand stack is: " << operands.giveTop() << endl;
+        operators.pop();
+    }
+    //cout << "Size of operator stack is: " << operators.stackSize() << endl;
+    int size = operands.stackSize();
+    string *postFix = new string[size];
+    while(!operands.isEmpty())
+    {
+        postFix[size-1] = operands.giveTop();
+        //cout << "postFix position: " << size-1 << ", value: " << operands.giveTop() << endl;
+        operands.pop();
+        size--;
+        postFixSize++;
+    }
+    /*for(int i = 0 ; i < infix_size+1; i++)
+    {
+        cout << postFix[i];
+    }
+    cout << endl;*/
+    return postFix;
+}
+
+string removeLeadingZeros(string num)
+{
+    string portion, modEqn;
+    for(int i = 0; i < num.length(); i++)
+    {
+        //First, scan the string eqn for operators. Everything up till that operator will be added to portion.
+        if(num[i] != '+' && num[i] != '-' && num[i] != '*' && num[i] != '/')
+        {
+            //If num[i] isn't an operator, I want those operands in my portion string.
+            portion += num[i];
+        }
+        else if(num[i] == '+' || num[i] == '-' || num[i] == '*' || num[i] == '/')
+        {
+            for(int i = 0; i < portion.size(); i++)
+            {
+                if(portion[i] == '0' && portion[i-1] != '0' && portion[i+1] != '0')
+                {
+                    modEqn += portion;
+                    portion = "";
+                }
+            }
+            //If we do hit an operator, first let's check the portion string for illegal zeros.
+            portion.erase(0, min(portion.find_first_not_of('0'), portion.size()-1));
+            //Now we need to add this to the full eqn;
+            modEqn += portion;
+            //now let's add in the operator so we don't lose it.
+            modEqn += num[i];
+            //now we'll clear out portion for the next part of the eqn
+            portion = "";
+        }
+    }
+    //Whatever's left of the end of the eqn is now inside portion. Now we'll delete its illegal zeros, add it to
+    //modEqn, and return the full modified eqn
+    portion.erase(0, min(portion.find_first_not_of('0'), portion.size()-1));
+    modEqn += portion;
+    return modEqn;
+}
+bool isNotValid(string eqn)
+{
+    //cout << "Equation is: " << eqn << endl;
+    string invalids[20] = {"*)", "/)", "+)", "-)", "(*", "(/", "**", "//", "++", "--", "-+", "+-", "+*", "+/", "-*", "-/",
+    "(+)", "(-)", "(/)", "(*)"};
+    for(int i = 0; i < 20; i++)
+    {
+        if(eqn.find(invalids[i]) != -1)
+        {
+            //returns true if the equation contains one of the invalid combinations from the invalids array
+            //cout << invalids[i] << endl;
+            return true;
+        }
+    }
+    //cout << "Valid." << endl;
+    return false;//returns false if equation isn't invalid
+}
+bool match(char open, char close)
+{
+    if(open == '{' && close == '}')
+    {
+        return true;
+    }
+    else if(open == '[' && close == ']')
+    {
+        return true;
+    }
+    else if(open == '(' && close == ')')
+    {
+        return true;
+    }
+    return false;
+}
+bool testBalance(string eqn)
+{
+    //returns true if eqn is balanced as far as brackets/braces
+    //returns false if imbalanced
+    stack <char> test;
+    for(int i = 0; i < eqn.length(); i++)
+    {
+        if(eqn[i] == '(' || eqn[i] == '{' || eqn[i] == '[')
+        {
+            //if we encounter an opening brace of any kind, add it to our stack.
+            test.push(eqn[i]);
+        }
+        if(eqn[i] == ')' || eqn[i] == '}' || eqn[i] == ']')
+        {
+            if(test.isEmpty())
+            {
+                //cout << "Imbalanced." << endl;
+                return false;
+            }
+            else if(match(test.giveTop(), eqn[i]))
+            {
+                test.pop();
+            }
+        }
+    }
+    if(test.isEmpty())
+    {
+        //cout << "Balanced." << endl;
+        return true;
+    }
+    //cout << "Imbalanced." << endl;
+    return false;
+}
+string reverse(string &num)
+{
+    for(int i = 0; i < num.length()/2; i++)
+    {
+        char temp = num[i];
+        num[i] = num[num.length()-i-1];
+        num[num.length()-i-1] = temp;
+    }
+    return num;
+}
+
+bool num1IsSmaller(string num1, string num2)
+{
+    if(num1.length() == num2.length())//If they're of equal length, compare char by char until you find a difference, then return answer
+    {
+        for(int i = 0; i < num1.length(); i++)
+        {
+            if(num1[i] < num2[i])
+            {
+                return true;
+            }
+            else if(num1[i] > num2[i])
+            {
+                return false;
+            }
+        }
+    }
+    if(num1.length() != num2.length())//If they're not of equal length, we can immediately return an answer based on that
+    {
+        if(num1.length() < num2.length())
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    return false;
+}
+string subtractNum(string num1, string num2)
+{
+    string original1 = num1;//come back and try to deal w/ using these later if an error comes up
+    string original2 = num2;
+    if(num1 == "0")
+    {
+        return num2;
+    }
+    else if(num2 == "0")
+    {
+        return num2;
+    }
+    if(num1.find('-') != -1 && num2.find('-') != -1)//if BOTH #'s are negative
+    {
+        /*cout << "Both are negative." << endl;
+        cout << "num1 = " << num1 << " " << "num2 = " << num2 << endl;
+        //find the difference and use the sign of the larger number
+        num1.erase(0,1);
+        num2.erase(0,1);//get rid of the negatives
+        string temp = num1;
+        num1 = num2;
+        num2 = temp;//swap them out*/
+        num2.erase(0,1);
+        return addNum(num1, num2);
+    }
+    else if(num1.find('-') != -1 && num2.find('-') == -1)//If only num1 is a negative
+    {
+        //cout << "Only num1 is negative." << endl;
+        //cout << "num1 = " << num1 << " " "num2 = " << num2 << endl;
+        num1.erase(0,1);
+        //cout << num2 << endl;
+        /*string temp = num1;
+        num1 = num2;
+        num2 = temp;*/
+        string temp = addNum(num1, num2);
+        temp.insert(0, "-");
+        //cout << "Temp answer = " << temp << endl;
+        return temp;
+
+    }
+    else if(num1.find('-') == -1 && num2.find('-') != -1)//if only num2 is a negative
+    {
+        //cout << "Num1 is negative." << endl;
+        //In case we have a minus a minus and create a plus out of it, just send it to addNum
+        num2.erase(0,1);
+        //cout << num1 << " " << num2 << endl;
+        return addNum(num1, num2);
+    }
+    //All #'s will be stripped of any unnecessary leading 0's by the time they come here.
+    //Therefore, # of digits will be a legitimate way to tell if one number of larger than the other.
+    string revResult;
+    string result;
+    string less, more;
+    int carry = 0;
+    //case 1: Both #'s have an equal # of digits
+    if(num1.length() == num2.length())
+    {
+        if(num1IsSmaller(num1, num2))
+        {
+            less = num1;
+            more = num2;
+        }
+        else
+        {
+            less = num2;
+            more = num1;
+        }
+        for(int i = more.length()-1; i >= 0; i--)
+        {
+            int sub = ((more[i] - '0') - (less[i] - '0') - carry);
+            if (sub < 0)
+            {
+                sub += 10;
+                carry = 1;
+            }
+            else
+            {
+                carry = 0;
+            }
+            revResult.push_back(sub + '0');
+        }
+    }
+    else
+    {
+        //case 2: num1 has more digits than num2
+        if (num1.length() > num2.length())
+        {
+            more = num1;
+            less = num2;
+        }
+        //case 3: num1 has fewer digits than num2
+        else if (num1.length() < num2.length())
+        {
+            more = num2;
+            less = num1;
+        }
+        int difference = more.length() - less.length();
+        for (int i = less.length() - 1; i >= 0; i--)//for actual num1-num2 work.
+        {
+            int sub = ((more[i + difference] - '0') - (less[i] - '0') - carry);
+            if (sub < 0)
+            {
+                sub += 10;
+                carry = 1;
+            }
+            else
+            {
+                carry = 0;
+            }
+            revResult.push_back(sub + '0');
+        }
+        for (int i = more.length() - less.length() - 1; i >= 0; i--) {
+            if (more[i] == '0' && carry == 1) {
+                revResult.push_back('9');
+                continue;
+            }
+            int sub = ((more[i] - '0') - carry);
+            if (i > 0 || sub > 0) {
+                revResult.push_back(sub + '0');
+            }
+            carry = 0;
+        }
+    }
+    result = reverse(revResult);
+    //cout << "Result before checking if negative is needed: " << result << endl;
+    //case 1: both are positive, but num1 < num2
+    if((original1.find('-') == -1 && original2.find('-') == -1) && num1IsSmaller(original1, original2) && result != "0")
+    {
+        result.insert(0, "-");
+    }
+    //case 2: num1 is negative, num2 is positive
+    else if((original1.find('-') != -1 && original2.find('-') == -1) && num1IsSmaller(num1, num2) && result != "0")
+    {
+        //cout << original1 << " is negative and " << original2 << " is positive." << endl;
+        result.insert(0, "-");
+    }
+    //case 3: both are negative, creating -num1+num2, but the value of num1 is larger and we'll still have a negative result
+    else if((original1.find('-') != -1 && original2.find('-') != -1) && !num1IsSmaller(num1, num2) && result != "0")
+    {
+        result.insert(0, "-");
+    }
+    return result;
+}
+string addNum(string num1, string num2)
+{
+    //cout << "Inside addNum" << endl;
+    if(num1.find('-') != -1 && num2.find('-') != -1)
+    {
+        //cout << "Both are negative." << endl;
+        num2.erase(0,1);
+        return subtractNum(num1, num2);
+    }
+    else if(num1.find('-') != -1 || num2.find('-') != -1)
+    {
+        //If either number contains a negative sign, I'm just going to send it to subtraction instead.
+        //cout << "One of the numbers contains a negative, sending to subtract fxn." << endl;
+        if(num1.find('-') != -1 && num2.find('-') == -1)//If just num1 is negative
+        {
+            num1.erase(0,1);
+            string temp = num1;
+            num1 = num2;
+            num2 = temp;
+            return subtractNum(num1, num2);
+        }
+        else if(num1.find('-') == -1 && num2.find('-') != -1)//if just num2 is negative
+        {
+            num2.erase(0,1);
+            return subtractNum(num1, num2);
+        }
+    }
+    else if(num1.length() > num2.length())
+    {
+        string temp = num1;
+        num1 = num2;
+        num2 = temp;
+    }
+    string result;
+    int difference = num2.length() - num1.length();
+    int carry = 0;
+    for(int i = num1.length()-1; i >= 0; i--)
+    {
+        int sum = ((num1[i]-'0') + (num2[i+difference] - '0') + carry);
+        //cout << num1[i] << " + " << num2[i] << " + " << carry << " = " << sum << endl;
+        result.push_back(sum%10 + '0');
+        carry = sum/10;
+    }
+    for(int i = num2.length()-num1.length()-1; i >= 0; i--)
+    {
+        //cout << "Inside second for loop." << endl;
+        int sum = ((num2[i] - '0') + carry);
+        result.push_back(sum%10 + '0');
+        carry = sum/10;
+    }
+    if(carry)
+    {
+        result.push_back(carry + '0');
+    }
+    //cout << "Result = " << result << endl;
+    reverse(result);
+    return result;
+}
+string multiplyNum(string num1, string num2)
+{
+    //if both are negative, return a positive
+    //if one is negative, return a negative
+    string original1 = num1;//dealing w/ negatives.
+    string original2 = num2;
+    stack <string> store;
+    string result;
+    if(num1.find('-') != -1 && num2.find('-') != -1)
+    {
+        //This takes care of what to do if both are negative, since that'll be positive.
+        num1.erase(0, 1);
+        num2.erase(0,1);
+    }
+    else if(num1.find('-') != -1 && num2.find('-') == -1)
+    {
+        num1.erase(0,1);
+    }
+    else if(num1.find('-') == -1 && num2.find('-') != -1)
+    {
+        num2.erase(0,1);
+    }
+    if(num1 == "0" || num2 == "0")
+    {
+        result = "0";
+        return result;
+    }
+    if(num1 == "1")
+    {
+        result = num2;
+    }
+    else if(num2 == "1")
+    {
+        result = num1;
+    }
+    else if(num1.length() == num2.length())
+    {
+        //cout << "Numbers are of equal length." << endl;
+        //Here it doesn't really matter which one's on top or bottom b/c the length is the same
+        string top, bottom, temp;
+        stack <string> store;
+        int carry = 0;
+        top = num1;
+        bottom = num2;
+        for(int i = bottom.length()-1; i >= 0; i--)
+        {
+            int ones = bottom.length()-1;
+            int current = i;
+            int distance = ones-current;
+            int count = 0;
+            while(count < distance)
+            {
+                temp.push_back('0');
+                count++;
+            }
+            for(int j = top.length()-1; j >= 0; j--)
+            {
+                int prod = ((bottom[i]-'0')*(top[j]-'0')+carry);
+                //cout << bottom[i] << " * " << top[j] << " + " << carry << " = " << prod << endl;
+                if(prod > 9)
+                {
+                    if(j == 0)
+                    {
+                        temp.push_back(prod%10+'0');
+                        //cout << "Temp: " << temp << endl;
+                        temp.push_back(prod/10+'0');
+                        //cout << "Temp: " << temp << endl;
+                        carry = 0;
+                    }
+                    else
+                    {
+                        carry = prod/10;
+                        prod %= 10;
+                        temp.push_back(prod+'0');
+                        //cout << "Maybe Temp: " << temp << endl;
+                    }
+                }
+                else
+                {
+                    carry = 0;
+                    temp.push_back(prod+'0');
+                    //cout << "Temp: " << temp << endl;
+                }
+
+            }
+            reverse(temp);
+            //cout << "Reversing Temp: " << temp << endl;
+            store.push(temp);
+            temp = "";
+        }
+        while(store.stackSize() > 1)
+        {
+            //pop two from the stack, add them together, push the result back into the stack
+            string add1 = store.giveTop();
+            //cout << "add1: " << add1 << endl;
+            store.pop();
+            string add2 = store.giveTop();
+            //cout << "add2: " << add2 << endl;
+            store.pop();
+            string tempResult = addNum(add1, add2);
+            //cout << "tempResult: " << tempResult << endl;
+            store.push(tempResult);
+        }
+        //Once we only have one thing left in the stack, that's our grand answer!
+        //Check if we need to tack on a negative, then return that sucker!
+        if(store.stackSize() == 1)
+        {
+            result = store.giveTop();
+            store.pop();
+        }
+    }
+    else
+    {
+        string less, more, temp;
+        int carry = 0;
+        if(num1.length() < num2.length())
+        {
+            //cout << num1 << " has fewer digits than " << num2 << endl;
+            less = num1;
+            more = num2;
+        }
+        else if(num1.length() > num2.length())
+        {
+            //cout << num1 << " has more digits than " << num2 << endl;
+            less = num2;
+            more = num1;
+        }
+        for(int i = less.length()-1; i >= 0; i--)
+        {
+            //deals w/ how many zeros to add to the line before any math is done
+            //The # of 0's is equal to how far away you are from the one's place.
+            int ones = less.length()-1;
+            int current = i;
+            int distance = ones-current;
+            int count = 0;
+            while(count < distance)
+            {
+                temp.push_back('0');
+                count++;
+            }
+            for(int j = more.length()-1; j >= 0; j--)
+            {
+                int prod = ((less[i]-'0')*(more[j]-'0')+carry);
+                if(prod > 9)
+                {
+                    //cout << "Prod is: " << prod << endl;
+                    if(j == 0)
+                    {
+                        temp.push_back(prod%10+'0');
+                        //cout << "Temp: " << temp << endl;
+                        temp.push_back(prod/10+'0');
+                        //cout << "Temp: " << temp << endl;
+                        carry = 0;
+                    }
+                    else
+                    {
+                        carry = prod/10;
+                        prod %= 10;
+                        temp.push_back(prod+'0');
+                        //cout << "Maybe Temp: " << temp << endl;
+                    }
+                }
+                else
+                {
+                    carry = 0;
+                    temp.push_back(prod+'0');
+                }
+                //cout << "temp inside nested for loop: " << temp << endl;
+            }
+            //cout << "Temp reversed: " << reverse(temp) << endl;
+            reverse(temp);
+            //cout << "Reversing Temp: " << temp << endl;
+            store.push(temp);
+            temp = "";
+        }
+        //now deal w/ adding all the pieces from the stack together
+        while(store.stackSize() > 1)
+        {
+            //pop two from the stack, add them together, push the result back into the stack
+            string add1 = store.giveTop();
+            //cout << "add1: " << add1 << endl;
+            store.pop();
+            string add2 = store.giveTop();
+            //cout << "add2: " << add2 << endl;
+            store.pop();
+            string tempResult = addNum(add1, add2);
+            //cout << "tempResult: " << tempResult << endl;
+            store.push(tempResult);
+        }
+        //Once we only have one thing left in the stack, that's our grand answer!
+        //Check if we need to tack on a negative, then return that sucker!
+        if(store.stackSize() == 1)
+        {
+            result = store.giveTop();
+            store.pop();
+        }
+    }
+    if((original1.find('-') != -1 && original2.find('-') == -1) || (original1.find('-') == -1 && original2.find('-') != -1))
+    {
+        //If just one is negative, result must be negative.
+        result.insert(0, "-");
+    }
+    return result;
+}
+string doMath(string op, string num1, string num2)
+{
+    string result;
+    if(op == "+")
+    {
+        //go to addition fxn
+        result = addNum(num1, num2);
+    }
+    else if(op == "-")
+    {
+        //go to subtraction fxn
+        result = subtractNum(num1, num2);
+    }
+    else if(op == "*")
+    {
+        //go to multiplication fxn
+        result = multiplyNum(num1, num2);
+    }
+    else if(op == "/")
+    {
+        //go to division fxn
+        result = "Haven't done division yet.";
+    }
+    return result;
+}
+
+bool isStrNegative(string num)
+{
+    //Trying to account for string negatives
+    //Tweaking my isOperand function just wasn't going to end well, since I always
+    //meant to use it for one char at a time.
+    if(num.find("-") != -1 && num.length() > 1)
+    {
+        return true;
+    }
+    return false;
+}
+string evalPostFix(string postFix[], int size)
+{
+    stack <string> operands;
+    string op1;
+    string op2;
+    /*for(int i = 0; i < size; i++)
+    {
+        cout << i << ": " << postFix[i] << endl;
+    }*/
+    for(int i = 0; i < size; i++)
+    {
+        //cout << "postFix[i] = " << postFix[i] << endl;
+        //cout << "Stack size: " << operands.stackSize() << endl;
+        if(!operands.operatorCheck(postFix[i]) || isStrNegative(postFix[i]))
+        {
+            //cout << "Pushing " << postFix[i] << endl;
+            operands.push(postFix[i]);
+            //cout << "Top of operand stack: " << operands.giveTop() << endl;
+        }
+        else if(operands.operatorCheck(postFix[i]))
+        {
+            op2 = operands.giveTop();
+            operands.pop();
+            op1 = operands.giveTop();
+            operands.pop();
+            //cout << "Sending " << postFix[i] << ", " << op1 << ", and " << op2 << " to doMath fxn." << endl;
+            string temp = doMath(postFix[i], op1, op2);
+            //cout << op1 << " " << postFix[i] << " " << op2 << " = " << temp << ". Pushing " << temp << endl;
+            operands.push(temp);
+            //cout << "Top of operands stack: " << operands.giveTop() << endl;
+        }
+    }
+    string result;
+    //cout << "Stack size: " << operands.stackSize() << endl;
+    if(operands.stackSize() == 1)
+    {
+        result = operands.giveTop();
+        operands.pop();
+    }
+    //cout << "Result: " << result << endl;
+    return result;
+}
+
+using namespace std;
+int main(int argc, char* argv[])
+{
+
+    //print original equation=solution
+        //First pull equations from the text file
+            //We can put an entire equation into it's own string array, just to store them.
+            //Pull one equation from the storage array at a time.
+                //Test for balance
+                //Test for validity
+            //If there's nothing wrong, proceed w/ running it through the infix to postfix conversion fxn.
+            //Once we've left that function, we have to evaluate it to get an answer to the postfix eqn.
+                //The eval fxn will read the postfix eqn.
+                    //if it sees two #'s, it will pop them from the stack and then use
+
+    //DIDN'T ACCOUNT FOR IF ALL OPERATORS WERE OF EQUAL PRECEDENCE. IT DOESN'T KNOW WHEN TO POP IF THAT HAPPENS.
+
+    /*123456789+(123456789+987654321)*123456789 --> CORRECT
+123456789-(123456789*987654321)-123456789 --> CORRECT
+123456789*(123456789-987654321)*123456789 --> CORRECT
+123456789*(+987654321+123456789)+123456789 --> CORRECT
+123456789*(-987654321-123456789)-123456789 --> CORRECT
+123456789+(+987654321+123456789)*123456789 --> CORRECT
+123456789-(-987654321-123456789)*123456789 --> CORRECT*/
+
+    /*string eqn = "123456789-(-987654321-123456789)*123456789";
+    string stripped = removeLeadingZeros(eqn);
+    string infix[stripped.length()];
+    if(isNotValid(stripped) || !testBalance(eqn))
+    {
+        cout << "Equation is not valid." << endl;
+    }
+    if(!isNotValid(stripped) && testBalance(eqn))
+    {
+        for(int i = 0; i < stripped.length(); i++)
+        {
+            infix[i] = stripped[i];
+        }
+    }
+    string *postFix = inToPostConversion(infix, stripped.length());
+    //cout << *postFix << endl;
+    cout << evalPostFix(postFix, postFixSize);*/
+
+
+    int count = 0;
+    stack <string> backward;
+    stack <string> forward;
+    string line;
+    ArgumentManager am(argc, argv);
+    const string input = am.get("input");
+    ifstream inFile;
+    inFile.open(input);
+    while(getline(inFile, line))
+    {
+        count++;
+        backward.push(line);
+    }
+    inFile.close();
+    while(!backward.isEmpty())
+    {
+        forward.push(backward.giveTop());
+        backward.pop();
+    }
+    while(!forward.isEmpty())
+    {
+        if(isNotValid(forward.giveTop()) || !testBalance(forward.giveTop()))//If it's invalid OR imbalanced
+        {
+            forward.pop();
+            continue;
+        }
+        else if (!isNotValid(forward.giveTop()) && testBalance(forward.giveTop()))//if it's valid AND balanced
+        {
+            cout << forward.giveTop() << "=";
+            string stripped = removeLeadingZeros(forward.giveTop());
+            string infix[stripped.length()];
+            for (int i = 0; i < stripped.length(); i++)
+            {
+                infix[i] = stripped[i];
+            }
+            string *postFix = inToPostConversion(infix, stripped.length());
+            cout << evalPostFix(postFix, postFixSize);
+            cout << endl;
+            forward.pop();
+            postFixSize = 0;
+        }
+    }
+    return 0;
+}
