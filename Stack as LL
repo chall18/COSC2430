@@ -1,0 +1,139 @@
+//STACK.H
+
+//
+// Created by Caitie Hall on 3/6/18.
+//
+
+#ifndef LINKEDLISTSTACK_STACK_H
+#define LINKEDLISTSTACK_STACK_H
+
+#include "node.h"
+#include <iostream>
+using namespace std;
+class stack
+{
+public:
+    stack();
+    node *head;
+    bool isEmpty();
+    void push(char newLetter);
+    node *pop();
+};
+#endif //LINKEDLISTSTACK_STACK_H
+
+
+//STACK.CPP
+
+//
+// Created by Caitie Hall on 3/6/18.
+//
+
+#include "stack.h"
+#include "node.h"
+#include <iostream>
+using namespace std;
+stack::stack()
+{
+    head = NULL;
+}
+bool stack::isEmpty()
+{
+    if(head == NULL)
+    {
+        return true;
+    }
+    return false;
+}
+void stack::push(char newLetter)
+{
+    node *newNode = new node(newLetter);
+    if(isEmpty())
+    {
+       head = newNode;
+        newNode->next = NULL;
+        newNode->prev = NULL;
+    }
+    else
+    {
+        newNode->next = head;//next is pointing downward. Prev would point upward
+        newNode->prev = NULL;
+        head->prev = newNode;
+        head = newNode;
+    }
+}
+node* stack::pop()
+{
+    if(isEmpty())
+    {
+        cout << "Stack is already empty." << endl;
+    }
+    node *temp = head;
+    head = head->next;//point head to the next node so we don't accidentally delete the head
+    return temp;
+}
+
+
+//NODE.H
+
+//
+// Created by Caitie Hall on 3/6/18.
+//
+
+#ifndef LINKEDLISTSTACK_NODE_H
+#define LINKEDLISTSTACK_NODE_H
+class node
+{
+public:
+    node *next, *prev;
+    char letter;
+    node(char newLetter);
+};
+#endif //LINKEDLISTSTACK_NODE_H
+
+
+//NODE.CPP
+
+//
+// Created by Caitie Hall on 3/6/18.
+//
+
+#include "node.h"
+#include <iostream>
+using namespace std;
+node::node(char newLetter)
+{
+    letter = newLetter;
+}
+
+
+//MAIN.CPP
+
+#include <iostream>
+#include "node.h"
+#include "stack.h"
+using namespace std;
+int main()
+{
+    stack backward;
+    stack forward;
+    string name = "Caitie";
+    for(int i = 0; i < 6; i++)
+    {
+        backward.push(name[i]);
+    }
+    cout << "Backward: ";
+    char temp;
+    for(int i = 0; i < 6; i++)
+    {
+        temp = backward.pop()->letter;
+        cout << temp;
+        forward.push(temp);
+    }
+    cout << endl;
+    cout << "Forward: ";
+    for(int i = 0; i < 6; i++)
+    {
+        cout << forward.pop()->letter;
+    }
+    return 0;
+}
