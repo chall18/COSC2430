@@ -1,0 +1,218 @@
+//NODE.H
+
+//
+// Created by Caitie Hall on 3/7/18.
+//
+
+#ifndef STACKQUIZ_NODE_H
+#define STACKQUIZ_NODE_H
+#include <iostream>
+using namespace std;
+
+class node
+{
+public:
+    node *prev, *next;
+    string data;
+    node(string newString);
+};
+
+
+#endif //STACKQUIZ_NODE_H
+
+
+//NODE.CPP
+
+//
+// Created by Caitie Hall on 3/7/18.
+//
+
+#include "node.h"
+#include <iostream>
+using namespace std;
+node::node(string newChar)
+{
+    data = newChar;
+}
+
+//STACK.H
+
+//
+// Created by Caitie Hall on 3/7/18.
+//
+
+#ifndef STACKQUIZ_STACK_H
+#define STACKQUIZ_STACK_H
+#include "node.h"
+#include <iostream>
+using namespace std;
+class stack
+{
+public:
+    node *head;
+    int counter;
+    stack();
+    void pop();
+    void push(string newData);
+    bool isEmpty();
+    bool operator ==(string);
+    int stackSize();
+    string peek();
+
+};
+
+
+#endif //STACKQUIZ_STACK_H
+
+//STACK.CPP
+
+//
+// Created by Caitie Hall on 3/7/18.
+//
+
+#include "stack.h"
+#include <iostream>
+#include <string.h>
+#include <stdio.h>
+using namespace std;
+stack::stack()
+{
+    head = NULL;
+    counter = 0;
+}
+void stack::pop()
+{
+    if(!isEmpty())
+    {
+        node *temp = head;
+        head = head->next;//point head to second node
+        temp->next = NULL;
+        temp->prev = NULL;
+        delete temp;
+    }
+    counter--;
+}
+void stack::push(string newData)
+{
+    node *newNode = new node(newData);
+    if(isEmpty())
+    {
+        head = newNode;
+        newNode->next = NULL;
+        newNode->prev = NULL;
+    }
+    else
+    {
+        newNode->next = head;
+        newNode->prev = NULL;
+        head->prev = newNode;
+        head = newNode;
+    }
+    counter++;
+}
+bool stack::isEmpty()
+{
+    if(head == NULL)
+    {
+        return true;
+    }
+    return false;
+}
+bool stack::operator ==(string second)
+{
+    if(*this == second)
+    {
+        cout << "True";
+        return true;
+    }
+    else
+    {
+        cout << "False";
+    }
+    return false;
+}
+int stack::stackSize()
+{
+    return counter;
+}
+string stack::peek()
+{
+    return head->data;
+}
+
+//MAIN.CPP
+
+#include <iostream>
+#include <fstream>
+#include "stack.h"
+using namespace std;
+int main()
+{
+    stack first;
+    stack second;
+    stack unmodified;
+    string temp;
+    ifstream inFile("input2.txt");
+    string line;
+    while(getline(inFile, line))
+    {
+        line.erase(remove(line.begin(), line.end(), ' '), line.end());
+        unmodified.push(line);
+        if(line.length() % 2 == 0)//If the word has an even # of letters
+        {
+            for(int i = 0; i < line.length()/2; i++)//for the first half of the word
+            {
+                temp += tolower(line[i]);
+            }
+            first.push(temp);
+            temp = "";
+            for(int i = (line.length()/2)+1; i < line.length(); i++)
+            {
+                temp += tolower(line[i]);
+            }
+            reverse(temp.begin(), temp.end());
+            second.push(temp);
+            temp = "";
+        }
+        if(line.length() % 2 != 0)//uneven # of letters
+        {
+            for(int i = 0; i < line.length()/2; i++)
+            {
+                temp += tolower(line[i]);
+            }
+            first.push(temp);
+            temp = "";
+            for(int i = (line.length()/2)+1; i < line.length(); i++)
+            {
+                temp += tolower(line[i]);
+            }
+            reverse(temp.begin(), temp.end());
+            second.push(temp);
+            temp = "";
+        }
+    }
+    inFile.close();
+
+    //cout << first.isEmpty() << endl;
+    //cout << second.isEmpty() << endl;
+    ofstream outFile("output.txt");
+    while(!unmodified.isEmpty())
+    {
+        if(first.head->data == second.head->data)
+        {
+            outFile << unmodified.head->data << " " << "True" << endl;
+            first.pop();
+            second.pop();
+            unmodified.pop();
+        }
+        else
+        {
+            outFile << unmodified.head->data << " " << "False" << endl;
+            first.pop();
+            second.pop();
+            unmodified.pop();
+        }
+    }
+    outFile.close();
+    return 0;
+}
