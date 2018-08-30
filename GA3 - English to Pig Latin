@@ -1,0 +1,244 @@
+//MAIN.CPP
+
+#include <iostream>
+#include <cstring>
+#include <string>
+using namespace std;
+struct node//refers to each element in actual linked list
+{
+    char letter; //actual data part in the list
+    node *next;//ptr to next node in the LL
+};
+bool isEmpty(node *head)
+{
+    if(head == NULL)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+void insertAsFirstElement(node *&head, node *&tail, char letter)
+{
+    node *temp = new node;
+    temp->letter = letter;//assigning letter to node's actual info part
+    temp->next = NULL;
+    head = temp;
+    tail = temp;
+}
+bool vowelHeadCheck(node *head)
+{
+    tolower(head->letter);
+    switch(head->letter)
+    {
+        case 'a':
+        {
+            return true;
+        }
+        case 'e':
+        {
+            return true;
+        }
+        case 'i':
+        {
+            return true;
+        }
+        case 'o':
+        {
+            return true;
+        }
+        case 'u':
+        {
+            return true;
+        }
+        case 'y':
+        {
+            return true;
+        }
+        default:
+        {
+            return false;
+        }
+    }
+}
+bool vowelNotHeadCheck(node *current)
+{
+    tolower(current->letter);
+    char vowels[7] = "aeiouy";
+    while(current != NULL)
+    {
+        for(int i = 0; i < 7; i++)
+        {
+            if(current->letter == vowels[i])
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+void insert(node *&head, node *&tail, char letter)
+{
+    char way[5] = "-way";
+    char dash[2] = "-";
+    if(isEmpty(head))
+    {
+        insertAsFirstElement(head, tail, letter);
+    }
+    else if(vowelHeadCheck(head))
+    {
+        node *temp = new node;
+        temp->letter = letter;//assigning letter to node's actual info part
+        temp->next = NULL;
+        //set previous last value (next) to the temp node's memory address
+        tail->next = temp;
+        tail = temp;//joins the elements in the list
+    }
+}
+void remove(node *&head, node *&tail)
+{
+    if(isEmpty(head))
+    {
+        cout << "List is already empty" << endl;
+    }
+    else if(head == tail)//If there's only one element left
+    {
+        delete head;
+        head = NULL;
+        tail = NULL;
+    }
+    else
+    {
+        node *temp = head;
+        head = head->next;//move head onto the next one
+        delete temp;
+    }
+}
+void showList(node *current)
+{
+    if(isEmpty(current))
+    {
+        cout << "The list is empty." << endl;
+    }
+    else
+    {
+        cout << "List contents: " << endl;
+        while(current != NULL)
+        {
+            cout << current->letter << endl;
+            current = current->next;
+        }
+    }
+}
+void appendNode(node *&head, node *newInfo)
+{
+    /*node *temp;
+    temp = head;
+    while(temp->next != NULL)
+    {
+        temp = temp->next;//finding the tail
+    }
+    temp->next = newInfo;
+    newInfo->next = NULL;*/
+
+    node *ptr = head;
+    while(ptr->next != NULL)
+    {
+        ptr = ptr->next;
+    }
+    ptr->next = newInfo;
+}
+void appendConsonant(node *&head)
+{
+    // link prev to node after move
+    // link tail to node move, set move as new tail
+    node* tail;
+    tail = head;
+
+    while (tail->next != 0)
+    {
+        tail = tail->next;
+    }
+    tail->next = head;
+    head = head->next;
+    cout << "head in: " << head->letter << endl;
+    tail->next->next = 0;
+}
+void rotate(node *&head)
+{
+    while(!vowelNotHeadCheck(head))
+    {
+        appendConsonant(*&head);
+    }
+}
+int main()
+{
+    /*1. If string begins w/ vowel, add "-way" at the end of string.
+     * 2. If not, first add "-" at the end of the string. Then rotate the string 1 char at a time
+            until 1st char of string becomes a vowel. Then add "-ay" at the end.
+     * 3. If string has no vowels, consider 'y' a vowel and apply rules.
+     * 4. Strings w/ #s, just add -way to the end.
+     *
+     * Store char of a string into a linked list, use fxn.
+     *
+     * void rotate(), removes first node and inserts it at the end*/
+    char phrase[100];
+    cout << "Input a phrase to be translated: ";
+    cin >> phrase;
+    node *head = NULL;
+    node *tail = NULL;
+    int i = 0;
+    while(phrase[i] != '\0')//inserting user input into LL
+    {
+        insert(head, tail, phrase[i]);
+        i++;
+    }
+    cout << "Loaded phrase into LL." << endl;
+    node *wayhead = NULL;
+    node *waytail = NULL;
+    char way[] = "-way";
+    char dash[2] = "-";
+    char ay[] = "ay";
+    node *ayHead = NULL;
+    node *ayTail = NULL;
+    node *dashHead = NULL;
+    node *dashTail = NULL;
+    int j = 0;
+    while (way[j] != '\0')
+    {
+        insert(wayhead, waytail, way[j]);
+        j++;
+    }
+    while(dash[j] != '\0')
+    {
+        insert(dashHead, dashTail, dash[j]);
+        j++;
+    }
+    while (ay[j] != '\0')
+    {
+        insert(ayHead, ayTail, ay[j]);
+        j++;
+    }
+    cout << "Loaded -way into it's own node." << endl;
+    node *newnode = rotate(head, tail, wayhead);
+    cout << "Rotate got called." << endl;
+    if(vowelHeadCheck(head))
+    {
+        cout << "Starts w/ a vowel." << endl;
+        appendNode(head, wayhead);
+    }
+    else if(vowelNotHeadCheck(head))
+    {
+        //If phrase doesn't begin w/ vowel, first add "-" to end of string
+        appendNode(head, dashHead);
+        //Rotate string one char at a time until a vowel is head
+        rotate(head);
+        //Add "ay" at the end
+        appendNode(head, ayHead);
+    }
+    showList(newnode);
+    cout << "showList called" << endl;
+    return 0;
+}
