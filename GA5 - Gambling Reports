@@ -1,0 +1,206 @@
+//LINKEDLIST.H
+
+//
+// Created by Caitie Hall on 3/2/18.
+//
+
+#ifndef GA5_LINKEDLIST_H
+#define GA5_LINKEDLIST_H
+#include <iostream>
+#include "myFriend.h"
+using namespace std;
+class linkedList
+{
+public:
+    linkedList();
+    void addNewFriend(string newName, double funds); //should be addNewFriend
+    void printFinalReport();
+    void printInitialReport();
+    void playSlots();
+private:
+    myFriend *head;
+
+};
+#endif //GA5_LINKEDLIST_H
+
+
+//LINKEDLIST.CPP
+
+//
+// Created by Caitie Hall on 3/2/18.
+//
+
+#include "linkedList.h"
+#include "myFriend.h"
+#include <cmath>
+#include <string>
+#include <iomanip>
+linkedList::linkedList()
+{
+    head = NULL;
+}
+void linkedList::addNewFriend(string newName, double funds)
+{
+    myFriend *temp = new myFriend(newName, funds);
+    if(head == NULL)
+    {
+        head = temp;
+        temp->next = head;
+    }
+    else
+    {
+        temp->next = head->next;
+        head->next = temp;
+        head = temp;
+    }
+}
+void linkedList::printInitialReport()
+{
+    myFriend *traverse;
+    if (head == NULL)//If the list just happens to be empty
+    {
+        cout << "The casino is empty. No gamblers to report." << endl;
+        return;
+    }
+    else
+    {
+        traverse = head->next;
+        cout << "INITIAL REPORT" << endl << endl;
+        cout << "NAME" << "\t" << "INITIAL $" << endl;
+        while (traverse != head)
+        {
+            cout << traverse->name << "\t" << "$" << fixed << setprecision(2) << traverse->money << endl;
+            traverse = traverse->next;
+        }
+        cout << traverse->name << "\t" << "$" << fixed << setprecision(2) << traverse->money << endl;
+    }
+}
+void linkedList::printFinalReport()
+{
+    myFriend *traverse;
+    if(head == NULL)//If the list just happens to be empty
+    {
+        cout << "The casino is empty. No gamblers to report." << endl;
+        return;
+    }
+    else
+    {
+        traverse = head->next;
+        cout << "FINAL REPORT" << endl << endl;
+        cout << "NAME" << "\t" << "ENDING $" << "\t" << "LAST ROUND PLAYED" << "\t" << "MINUTES PLAYED" << endl;
+        while(traverse != head)
+        {
+            cout << traverse->name << "\t" << "$" << fixed << setprecision(2) << traverse->money << "\t\t\t" << traverse->roundsPlayed << "       \t\t" << traverse->time << endl;
+            traverse = traverse->next;
+        }
+        cout << traverse->name << "\t" << "$" << fixed << setprecision(2) << traverse->money << "\t\t\t" << traverse->roundsPlayed << "       \t\t" << traverse->time << endl;
+    }
+}
+void linkedList::playSlots()
+{
+    int fibonacci[8] = {1, 1, 2, 3, 5, 8, 13, 21};
+    int timeLimit = 30;
+    int i = 0;
+    double exponent = 0;
+    myFriend *traverse = head->next;
+    while(timeLimit > 0)//will keep us honest about the time limit
+    {
+        if(timeLimit < fibonacci[i])
+        {
+            exponent = pow(0.85, timeLimit);
+            traverse->money *= exponent;
+            traverse->time += timeLimit;
+            traverse->roundsPlayed++;
+            timeLimit -= timeLimit;
+        }
+        else
+        {
+            exponent = pow(0.85, fibonacci[i]);
+            traverse->time += fibonacci[i];
+            traverse->money *= exponent;
+            timeLimit -= fibonacci[i];//minutes elapsed per player
+            traverse->roundsPlayed++;
+        }
+        if(traverse == head)
+        {
+            i++;
+        }
+        traverse = traverse->next;
+    }
+}
+
+
+
+//MYFRIEND.H
+
+//
+// Created by Caitie Hall on 3/1/18.
+//
+
+#ifndef GA5_MYFRIEND_H
+#define GA5_MYFRIEND_H
+#include <iostream>
+using namespace std;
+
+class myFriend
+{
+public:
+    string name;
+    double money;
+    int roundsPlayed, time;
+    myFriend *next;
+    myFriend(string Name = "", double moneyAmt = 0.0, int roundsPlayed = 0, int friendTime = 0, myFriend *ptr = NULL);
+};
+
+
+#endif //GA5_MYFRIEND_H
+
+
+//MYFRIEND.CPP
+
+//
+// Created by Caitie Hall on 3/1/18.
+//
+
+#include "myFriend.h"
+#include <iostream>
+using namespace std;
+myFriend::myFriend(string newName, double moneyAmt, int rounds, int timePlayed, myFriend *ptr)
+{
+    name = newName;
+    money = moneyAmt;
+    next = ptr;
+    roundsPlayed = rounds;
+    time = timePlayed;
+}
+
+//MAIN.CPP
+
+/*
+ Caitie Hall - 33%
+ Christian Tith - 33%
+ Haiyang Xu - 33%
+ */
+
+#include <iostream>
+#include <cstdlib>
+#include "myFriend.h"
+#include "linkedList.h"
+using namespace std;
+int main()
+{
+    linkedList *list = new linkedList;
+    srand(time(0));
+    list->addNewFriend("Simon", 100 + double(rand()%(100000 - 10000 +100))/100);
+    list->addNewFriend("Mark", 100 + double(rand()%(100000 - 10000 +100))/100);
+    list->addNewFriend("Wade", 100 + double(rand()%(100000 - 10000 +100))/100);
+    list->addNewFriend("Ethan", 100 + double(rand()%(100000 - 10000 +100))/100);
+    list->addNewFriend("Jack", 100 + double(rand()%(100000 - 10000 +100))/100);
+    list->printInitialReport();
+    list->playSlots();
+    cout << endl << endl;
+    list->printFinalReport();
+
+    return 0;
+}
+
