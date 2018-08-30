@@ -1,0 +1,51 @@
+//MAIN.CPP
+
+#include <iostream>
+using namespace std;
+void insertionSort(int arr[], int n)
+{
+
+    //Initially we're saying we're sorted until index 0, so we'll pick up elements from
+    // 1 - n-1 and at each step we'll insert the element at its appropriate position in the sorted subset.
+    for(int i = 1; i < n; i++)
+    {
+        int value = arr[i];//Create a hole by taking out a value to insert in another variable.
+        int hole = i;//Another variable to mark the position of the hole
+        while(hole > 0 && arr[hole-1] > value)//shift all elements greater than the value to be inserted to the right.
+        {
+            //while hole > 0 && element @ index hole-1 > value,
+            //we'll shift the element at index hole to the hole
+            //Now our new hole will be index hole-1
+            arr[hole] = arr[hole-1];
+            hole -= 1;
+        }
+        //When we come out of the while loop, we put the value into the hole.
+        arr[hole] = value;
+    }
+}
+int main()
+{
+    //Not the best sorting algorithm in terms of performance, but it's a little
+    //more efficient than bubble or selection sort in practical scenarios.
+
+    /*You're splitting the array between a sorted portion and an unsorted portion,
+     * then inserting stuff from the unsorted subset into its proper place in the
+     * sorted subset until the unsorted subset is empty.
+     *
+        When we have a sorted array, the time complexity will be O(n) (beset case).
+        Worst case is a completely unsorted array. In that case, it's O(n^2).
+        Avg case: O(n^2).
+
+        # of comparison and shifts for this in all practical scenarios is a lot less than selection and bubble sort.*/
+
+
+
+
+    int arr[6] = {7, 2, 4, 1, 5, 3};
+    insertionSort(arr, 6);
+    for(int i = 0; i < 6; i++)
+    {
+        cout << arr[i] << " ";
+    }
+    return 0;
+}
