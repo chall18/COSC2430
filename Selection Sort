@@ -1,0 +1,40 @@
+//MAIN.CPP
+
+#include <iostream>
+using namespace std;
+void selectionSort(int arr[], int n)
+{
+    int minIndex;
+    for(int i = 0; i < n-1; i++)
+    {
+        minIndex = i;
+        for(int j = i+1; j < n; j++)
+        {
+            if(arr[j] < arr[minIndex])
+            {
+                minIndex = j;//update index of minimum element
+            }
+            int temp = arr[i];//Using a temp variable to swap the elements so the smallest element ends up in the right place
+            arr[i] = arr[minIndex];
+            arr[minIndex] = temp;
+        }
+    }
+}
+int main()
+{
+    //I am writing this as I follow along in a video lesson from mycodeschool so that I can better understand each sorting style
+    //simplest sorting algorithm.
+    //what's done most intuitively
+
+
+    //Time complexity of selection sort will be O(n^2)
+    //Slow sorting algorithm
+    int unsorted[6] = {2, 7, 4, 1, 5, 3};
+    selectionSort(unsorted, 6);
+    for(int i = 0; i < 6; i++)
+    {
+        cout << unsorted[i] << " ";
+    }
+
+    return 0;
+}
