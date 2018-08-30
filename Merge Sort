@@ -1,0 +1,94 @@
+//MAIN.CPP
+
+#include <iostream>
+using namespace std;
+void merge(int L[], int R[], int A[])
+{
+    int numL = sizeof(L)/sizeof(L[0]);
+    int numR = sizeof(R)/sizeof(R[0]);
+    int i = 0;//marks the index of the smallest unpicked in L
+    int j = 0;//marks index of smallest unpicked in R
+    int k = 0;//marks index of pos that needs to be filled in A
+    while(i < numL && j < numR)//while both indices are valid
+    {
+        if(L[i] <= R[j])//smallest unpicked in L comp w/ smallest unpicked in R
+        {
+            A[k] = L[i];
+            k += 1;
+            i += 1;
+        }
+        else
+        {
+            A[k] = R[j];
+            j += 1;
+        }
+        k += 1;
+        //Only one of the two while loops below will execute
+        while(i < numL)
+        {
+            A[k] = L[i];
+            i++;
+            k++;
+        }
+        while(j < numR)
+        {
+            A[k] = R[j];
+            j++;
+        }
+    }
+}
+void mergeSort(int arr[])
+{
+    int n = sizeof(arr)/arr[0];//store # of elements in A
+    //partition A into two halves
+    //We only need to paritition A if n > 1
+    if(n > 2)
+    {
+        return;
+    }
+    else
+    {
+        int middle = n/2;
+        int left[middle];//creating the subarray halves of A
+        int right[n-middle];
+        for(int i = 0; i < middle-1; i++)
+        {
+            //Feeds elements from 0-middle into the L side array
+            left[i] = arr[i];
+        }
+        for(int i = middle; i < n-1; i++)
+        {
+            //feeds remaining elements from middle to the end of the array to R side array
+            right[i-middle] = arr[i];
+        }
+        mergeSort(left);//recursive call that will continue making more subarrays
+        mergeSort(right);
+        merge(left, right, arr);//stick everything back together
+    }
+
+}
+int main()
+{
+
+    /*Time complexity: O(nlog(n)) in worst case.
+     * Involves recursion.
+     * We're going to break this problem into subproblems.
+     * Array will be divided into two possibly equal halves.
+     * We'll find a middle position and say all the elements before it belong
+     * to the first half, and the rest belong to the second half.
+     * If there's an odd # of elements, one will just have an extra element.
+     * You sort the subarrays, then merge the sorted subarrays back into the mega-array.
+     *
+     *
+     * Not an in-place sorting algorithm.
+     * When we divide an array into sublists, we create two entirely new array.
+     * Space complexity is O(n). Space consumption is proportional to the # of elements in the list
+     * */
+    int A[8] = {2, 4, 1, 6, 8, 5, 3, 7};
+    mergeSort(A);
+    for(int i = 0; i < 8; i++)
+    {
+        cout << A[i] << " ";
+    }
+    return 0;
+}
