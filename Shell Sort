@@ -1,0 +1,64 @@
+//MAIN.CPP
+
+#include <iostream>
+using namespace std;
+void printArray(int arr[], int n)
+{
+    for(int i = 0; i < n; i++)
+    {
+        cout << arr[i] << " " ;
+    }
+}
+int shellSort(int arr[], int n)
+{
+    //Start w/ big gap, then reduce size of gap
+    for(int gap = n/2; gap > 0; gap /= 2)
+    {
+        cout << "Current array: "; printArray(arr, n);
+        cout << endl;
+        //cout << "gap = " << gap << endl;
+        /* Do a gapped insertion sort for the gap of this size
+         * 1st gap elements a[0...gap-1] are already in gapped order
+         * Keep adding one more element until the entire array gap is sorted
+         */
+        //cout << "Gap = " << gap << ". arr[gap] = " << arr[gap] << endl;
+        for(int i = gap; i < n; i++)
+        {
+            cout << "Current array: "; printArray(arr, n);
+            cout << endl;
+            //cout << "i = " << i << endl;
+            //cout << "i = gap: " << i << " = " << gap << endl;
+            //cout << "i < n: " << i << " < " << n << endl;
+            //Add a[i] to elements that've been gap sorted
+            //Save a[i] in temp and make a hole at position i
+            int temp = arr[i];
+            //cout << "Temp = arr[i]: " << temp << endl;
+            //shift earlier gap-sorted elements up until the correct location for a[i] is found
+            int j;
+            for(j = i; j >= gap && arr[j-gap] > temp; j -= gap)
+            {
+                cout << "Current array: "; printArray(arr, n);
+                cout << endl;
+                cout << "j = " << j << endl;
+                //cout << "j = i: " << j << " = " << i << endl;
+                //cout << "j >= gap: " << j << " >= " << gap << endl;
+                arr[j] = arr[j-gap];
+                //cout << "arr[j] = arr[j-gap]: " << arr[j] << " = " << arr[j-gap];
+            }
+            cout << "j = " << j << endl;
+            //put temp (original a[i]) in its correct location
+            arr[j] = temp;
+            cout << "Current array: "; printArray(arr, n);
+            cout << endl;
+        }
+    }
+}
+int main()
+{
+    int arr[] = {3, 2, 1};
+    int i;
+    int n = sizeof(arr)/sizeof(arr[0]);
+    shellSort(arr, n);
+
+    return 0;
+}
