@@ -1,0 +1,50 @@
+//MAIN.CPP
+
+#include <iostream>
+using namespace std;
+struct node
+{
+    node *next, *prev;
+    char letter;
+};
+node *head = NULL;
+node *tail = NULL;
+bool deleteFromBeg()
+{
+    node *temp = head;
+    if(head == NULL)
+    {
+        return false;
+    }
+    else if(head == tail)
+    {
+        tail = 0;
+    }
+    cout << "I am d." << temp->letter;
+    head = temp->next;
+    head->prev = 0;
+    delete temp;
+    return true;
+}
+bool deleteFromTail()
+{
+    if(head == 0)
+    {
+        return false;
+    }
+    else
+    {
+        node *temp = tail;
+        cout << "I am del." << tail->letter;
+        tail = tail->prev;
+        tail->next = 0;
+        delete temp;
+        return true;
+    }
+}
+int main()
+{
+
+
+    return 0;
+}
