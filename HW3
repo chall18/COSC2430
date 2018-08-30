@@ -1,0 +1,356 @@
+//ARGUMENTMANAGER.H
+
+#ifndef ARG_MGR_H
+#define ARG_MGR_H
+
+#include <map>
+#include <string>
+#include <iostream>
+#include <sstream>
+using namespace std;
+
+class ArgumentManager
+{
+private:
+    map<string, string> argumentMap;
+    //void mergeMap(map<string, string> &source, map<string, string> &destination);
+public:
+    ArgumentManager(){ }
+    ArgumentManager(int _argc, char *argv[], char delimiter=';');
+    ArgumentManager(string rawArguments, char delimiter=';');
+    void parse(int argc, char *argv[], char delimiter=';');
+    void parse(string rawArguments, char delimiter=';');
+    string get(string argumentName);
+    string toString();
+    friend ostream& operator << (ostream &out, ArgumentManager &am);
+};
+
+#endif
+
+
+//ARGUMENTMANAGER.CPP
+
+#include "ArgumentManager.h"
+
+//void ArgumentManager::mergeMap(map<string, string> &source, map<string, string> &destination)
+//{
+//	for(map<string, string>::iterator iter = source.begin(); iter != source.end(); iter++)
+//	{
+//		destination[iter->first] = iter->second;
+//	}
+//}
+
+void ArgumentManager::parse(string rawArguments, char delimiter)
+{
+    stringstream currentArgumentName;
+    stringstream currentArgumentValue;
+    bool argumentNameFinished = false;
+
+    for(unsigned int i=0; i<=rawArguments.length(); ++i)
+    {
+        if(i == rawArguments.length() || rawArguments[i] == delimiter)
+        {
+            if(currentArgumentName.str() != "")
+            {
+                argumentMap[currentArgumentName.str()] = currentArgumentValue.str();
+            }
+            // reset
+            currentArgumentName.str("");
+            currentArgumentValue.str("");
+            argumentNameFinished = false;
+        }
+        else if(rawArguments[i] == '=')
+        {
+            argumentNameFinished = true;
+        }
+        else
+        {
+            if(argumentNameFinished)
+            {
+                currentArgumentValue << rawArguments[i];
+            }
+            else
+            {
+                // ignore any spaces in argument names.
+                if(rawArguments[i] == ' ')
+                    continue;
+                currentArgumentName << rawArguments[i];
+            }
+        }
+    }
+}
+
+void ArgumentManager::parse(int argc, char *argv[], char delimiter)
+{
+    if(argc > 1)
+    {
+        for(int i=1; i<argc; i++)
+        {
+            parse(argv[i], delimiter);
+        }
+    }
+}
+
+ArgumentManager::ArgumentManager(int argc, char *argv[], char delimiter)
+{
+    parse(argc, argv, delimiter);
+}
+
+ArgumentManager::ArgumentManager(string rawArguments, char delimiter)
+{
+    parse(rawArguments, delimiter);
+}
+
+string ArgumentManager::get(string argumentName)
+{
+    map<string, string>::iterator iter = argumentMap.find(argumentName);
+
+    //If the argument is not found, return a blank string.
+    if(iter == argumentMap.end())
+    {
+        return "";
+    }
+    else
+    {
+        return iter->second;
+    }
+}
+
+string ArgumentManager::toString()
+{
+    stringstream ss;
+    for(map<string, string>::iterator iter = argumentMap.begin(); iter != argumentMap.end(); ++iter)
+    {
+        ss << "Argument name: " << iter->first << endl;
+        ss << "Argument value: " << iter->second << endl;
+    }
+    return ss.str();
+}
+
+ostream& operator << (ostream &out, ArgumentManager &am)
+{
+    out << am.toString();
+    return out;
+}
+
+
+//MAIN.CPP
+
+#include <iostream>
+#include <fstream>
+#include <map>
+#include <unordered_map>
+#include <vector>
+#include <set>
+#include <sstream>
+#include "ArgumentManager.h"
+using namespace std;
+void addToHash(string record, unordered_map<string, set<size_t>> &hashTable, unsigned long long index)
+{
+    record.erase(0,1);//removing opening and closing curly braces in preparation for hashTable
+    record.erase(record.size()-1);
+    stringstream s(record);
+    string token;
+    while(getline(s, token, ','))
+    {
+        hashTable[token].insert(index);
+    }
+}
+void printCurrentTree(map<unsigned long long, string> &bst)
+{
+    map<unsigned long long, string>::iterator mapIter;
+    for(mapIter = bst.begin(); mapIter != bst.end(); ++mapIter)
+    {
+        cout << mapIter->second << endl;
+    }
+}
+void printHashTable(unordered_map<string, set<size_t>> hashTable)
+{
+    unordered_map<string, set<size_t>>::iterator unIter;
+    for(unIter = hashTable.begin(); unIter != hashTable.end(); ++unIter)
+    {
+        cout << unIter->first << ": ";
+        for(auto &item: unIter->second)
+        {
+            cout << item << ",";
+        }
+        cout << endl;
+    }
+}
+vector <size_t> returnIntersections(vector<size_t> indexHolder)
+{
+    int matchCheck;
+    vector<size_t> intersections;
+    while(indexHolder.size() > 0)
+    {
+        matchCheck = indexHolder.front();//Let matchCheck hold ONLY the first element in indexHolder
+        indexHolder.erase(indexHolder.begin());//Erase that first element from indexHolder.
+        //Now iterate through the remainder of indexHolder
+        for(auto &item: indexHolder)
+        {
+            if(item == matchCheck)
+            {
+                //If the item I'm looking at matches the only item in matchCheck, we have an intersection
+                intersections.push_back(item);//Push that # to intersections vector
+                //Delete that # from BOTH matchCheck and indexHolder
+                indexHolder.erase(remove(indexHolder.begin(), indexHolder.end(), item), indexHolder.end());
+            }
+        }
+    }
+    return intersections;
+}
+set<string> splitCriteria(string searchCriteria)
+{
+    string token;
+    stringstream s(searchCriteria);
+    set<string> search;
+    while(getline(s, token, ','))
+    {
+        search.insert(token);
+    }
+    return search;
+}
+void get(string searchCriteria, unordered_map<string, set<size_t>> hashTable, map<unsigned long long, string> bst)
+{
+    set<string> search = splitCriteria(searchCriteria);
+    unordered_map<string, set<size_t>>::iterator unIter;
+    if(search.size() == 1)
+    {
+        unIter = hashTable.find(searchCriteria);
+        if(unIter != hashTable.end())
+        {
+            set<size_t> matchIndices = unIter->second;
+            for(auto &item: matchIndices)
+            {
+                cout << bst.find(item)->second << endl;
+            }
+        }
+    }
+    else if(search.size() > 1)
+    {
+        vector<size_t>indexHolder;
+        for(auto &item:search)
+        {
+            unIter = hashTable.find(item);
+            if(unIter != hashTable.end())
+            {
+                for(auto &i: unIter->second)
+                {
+                    indexHolder.push_back(i);
+                }
+            }
+        }
+        vector<size_t> intersections = returnIntersections(indexHolder);
+        if(intersections.size() > 0)
+        {
+            for(auto &item: intersections)
+            {
+                cout << bst.find(item)->second << endl;
+            }
+            //cout << endl;
+        }
+    }
+}
+vector<string> getAtts(string& record)
+{
+    record.erase(0,1);
+    record.erase(record.size()-1);
+    stringstream s(record);
+    string token;
+    vector<string> attsForDeletion;
+    while(getline(s, token, ','))
+    {
+        attsForDeletion.push_back(token);
+    }
+    return attsForDeletion;
+}
+void deleteRecords(string searchCriteria, unordered_map<string, set<size_t>> &hashTable, map<unsigned long long, string> &bst)
+{
+
+    //cout << "Inside deleteRecords." << endl;
+    //cout << searchCriteria << endl;
+    if(searchCriteria.find(',') == -1)//no commas, no multiple attributes to think about. Just one.
+    {
+        //cout << "Inside if statement." << endl;
+        set<size_t> ids = hashTable[searchCriteria];//refers to the set of indices pertaining to the key, searchCriteria
+        //cout << "Made ids." << endl;
+        for (auto id : ids)//iterating through that set of indices
+        {
+            //cout << id << " ";
+            vector<string> atts = getAtts(bst[id]);//will return a vector containing any records with that index
+            for (auto& att : atts)//iterate over the records
+            {
+                //cout << att << " ";
+                hashTable[att].erase(id);//erase intersecting #s in any set whose key is part of the vector atts records
+            }
+            bst.erase(id);//now erase that record from the tree
+        }
+    }
+    if(searchCriteria.find(',') != -1)//If it has commas, there's >1 search criteria to use
+    {
+        set<string>criteria = splitCriteria(searchCriteria);//multiple search criteria in one set
+        vector<size_t> indices;
+        for(auto &criterion: criteria)//iterate over the search criteria set
+        {
+            set<size_t>ids = hashTable[criterion];
+            for(auto &id: ids)
+            {
+                indices.push_back(id);
+            }
+        }
+        vector<size_t> finalIndices = returnIntersections(indices);
+        for(auto &index: finalIndices)
+        {
+            vector<string> atts = getAtts(bst[index]);
+            for(auto &att: atts)
+            {
+                hashTable[att].erase(index);
+            }
+            bst.erase(index);
+        }
+    }
+}
+int main(int argc, char* argv[])
+{
+    if(argc < 2)
+    {
+        cout << "Usage: removeduplicated input=input1.txt output=output1.txt" << endl;
+        return -1;
+    }
+    else
+    {
+        ArgumentManager am(argc, argv);
+        const string input = am.get("input");//Will now be equal to "input#.txt"
+        const string output = am.get("output");//Will now be equal to "output.txt"
+
+        map<unsigned long long, string> bst;
+        unordered_map<string, set<size_t>> hashTable;
+        string record, operation;
+        unsigned long long index = 0;
+        ifstream inFile(input);
+        while (inFile >> operation >> record)
+        {
+            if (operation == "add")
+            {
+                bst.insert(pair<unsigned long long, string>(index, record));//Adding records to tree unaltered
+                addToHash(record, hashTable, index);
+            }
+            if (operation == "get")
+            {
+                record.erase(0, 1);//removing opening and closing curly braces in preparation for hashTable
+                record.erase(record.size() - 1);
+                get(record, hashTable, bst);
+                cout << endl;
+            }
+            if (operation == "delete")
+            {
+                record.erase(0, 1);
+                record.erase(record.size() - 1);
+                deleteRecords(record, hashTable, bst);
+            }
+            index++;
+        }
+        inFile.close();
+    }
+    return 0;
+}
