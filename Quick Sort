@@ -1,0 +1,50 @@
+//MAIN.CPP
+
+#include <iostream>
+using namespace std;
+void swap(int *a, int *b)
+{
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+int partition(int *a, int low, int high)
+{
+    int pivot = a[high];
+    int pIndex = low;
+    for(int i = low; i < high; i++)
+    {
+        if(a[i] <= pivot)
+        {
+            swap(&a[i], &a[pIndex]);
+            pIndex++;
+        }
+    }
+    swap(&a[pIndex], &a[high]);
+    return pIndex;
+}
+void quickSort(int *a, int low, int high)
+{
+    if(low < high)
+    {
+        int pIndex = partition(a, low, high);
+        quickSort(a, low, pIndex-1);
+        quickSort(a, pIndex+1, high);
+    }
+
+}
+int main()
+{
+    int A[5] = {5, 4, 3, 2, 1};
+    quickSort(A, 0, 4);
+    for(int i = 0; i < 5; i++)
+    {
+        cout << A[i] << " ";
+    }
+    return 0;
+
+    /*for(int i = 0; i <= 5-1; i++)
+    {
+        cout << i << " ";
+    }*/
+}
