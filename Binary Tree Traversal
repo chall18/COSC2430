@@ -1,0 +1,43 @@
+//MAIN.CPP
+
+#include <iostream>
+#include <queue>
+using namespace std;
+class node
+{
+public:
+    char data;
+    node *left, *right;//Stores address of L/R child
+};
+void levelOrder(node *root)
+{
+    //Level-order traversal
+    if(root == NULL)
+    {
+        return;
+    }
+    else
+    {
+        queue<node*> Q;
+        Q.push(root);//Insert address of root node into Q
+        while(!Q.empty())
+        {
+            node *current = Q.front();
+            cout << current->data << " ";
+            if(current->left != NULL)
+            {
+                Q.push(current->left);
+            }
+            if(current->right != NULL)
+            {
+                Q.push(current->right);
+            }
+            Q.pop();//removing element @ front of Q (parent node)
+        }
+    }
+}
+int main()
+{
+    
+    return 0;
+}
